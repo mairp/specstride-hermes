@@ -22,8 +22,8 @@ in this package's runner in the kit's `DoctorCheck` shape.
 | 3 | `host.hermes-version` | `hermes --version` | inside `HF-VERSION` range (`>=0.22.2 <0.23.0`) `ok`; outside `warn`; absent `warn` | no | `pin hermes-agent 0.22.2 or re-verify the host facts` |
 | 4 | `host.skills-installed` | records + frontmatter `metadata.specstride.version` in every scope root | all present, current, unshadowed `ok`; stale/shadowed `warn`; missing `fail`; reverse skipped `info` | no | the install command for the scope |
 | 5 | `host.state-root-writable` | create+remove a probe file under `$XDG_STATE_HOME/specstride/`; `terminal.backend` | local and writable `ok`; non-local backend `warn`; not writable `warn` | no | names the setting; never "move state into the repo" |
-| 6 | `host.permission-mode` | profile in force; `approvals.mode`; headless deny defaults; `HERMES_YOLO_MODE`; gateway cgroup + `systemd-run` presence | dedicated profile, no yolo `ok`; default profile `warn`; yolo `warn`; headless deny would block launch `warn`; gateway without `systemd-run` `warn` | no | `hermes -p specstride …` / the setting to change |
-| 7 | `host.plugin-enabled` | `hermes -p <p> plugins list --json` | enabled `ok`; installed not enabled `warn`; absent `info` | no | `hermes -p <p> plugins enable specstride` |
+| 6 | `host.permission-mode` | profile in force; `approvals.mode` (HF-CONFIG-GET); headless deny defaults; `HERMES_YOLO_MODE`; gateway cgroup + `systemd-run` presence (and `--user` reachable when uid ≠ 0) | dedicated profile, no yolo `ok`; default profile `warn`; yolo `warn`; headless deny would block launch `warn`; gateway without `systemd-run` `warn` | no | `hermes -p specstride …` / the setting to change |
+| 7 | `host.plugin-enabled` | `hermes -p <p> plugins list --json` (HF-PLUGINS-LIST) | enabled `ok`; installed not enabled `warn`; absent `info` | no | `hermes -p <p> plugins enable specstride` |
 | 8 | `host.kanban-plugin` | Hermes kanban enabled; 151 projector module and tab present (when 151 installed) | informational: `ok` / `info` | no | 151's install line |
 
 ## Exit codes

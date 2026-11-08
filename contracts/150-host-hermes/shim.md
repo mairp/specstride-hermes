@@ -27,7 +27,7 @@ Outside → stdout `[SPECSTRIDE-REFUSE] action=protocol reason=protocol-mismatch
 When `/proc/self/cgroup` contains the unit of host fact `HF-GW-UNIT` (`hermes-gateway.service`):
 
 - `systemd-run --scope --collect --quiet --unit=specstride-<8-hex> [--user when uid≠0] -- <cli> <argv…>`.
-- `systemd-run` missing → stderr `[SPECSTRIDE-WARN] action=launch reason=gateway-cgroup`, run the CLI directly.
+- `systemd-run` missing, or `--user` failing because no user manager or D-Bus is reachable → stderr `[SPECSTRIDE-WARN] action=launch reason=gateway-cgroup`, run the CLI directly; `host.permission-mode` reports the same condition.
 
 Outside the gateway cgroup the CLI runs directly. Engine detach does the rest (feature 122).
 

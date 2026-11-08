@@ -23,3 +23,9 @@ Mirrored by `src/host-facts.ts`; `host.hermes-version` reads `HF-VERSION` only.
 | HF-SKILL-LOAD | Skill load in a session is the tool `skill_view` | `tools/skills_tool.py:673, 725` | 2026-11-08 | verified | U-150-09: typed `/name` load recorded |
 | HF-STREAM-JSON | `chat --query-file - --format stream-json` emits `system/init`, `tool_use`, `tool_result`, `result{exit_code,error}` | `hermes_cli/stream_json.py:1-70` | 2026-11-08 | verified (read) | — |
 | HF-BACKEND | Which terminal backends share the host filesystem | — | — | unverified | U-150-11: fixture per backend |
+| HF-CONFIG-GET | `hermes -p <p> config get <key>` prints a value and writes nothing | — | — | unverified | T066: `config.yaml` mtime unchanged across the call |
+| HF-PLUGINS-LIST | `hermes -p <p> plugins list --json` lists each plugin's name and enabled state | — | — | unverified | T066 |
+| HF-PLUGINS-DISABLE | `hermes plugins disable <name>` is the inverse of `enable` | `hermes_cli/plugins_cmd.py` (next to `:696`) | — | unverified | read + T066 |
+| HF-SKILLS-LIST | `hermes skills list` lists the installed skills of the active home | — | — | unverified | T066 (the U-150-01 check) |
+| HF-PROFILE-CREATE | `hermes profile create <name>` makes `<home>/profiles/<name>/` | `hermes_cli/profiles.py` | — | unverified | read + quickstart step 0 |
+| HF-VERSION-FMT | `hermes --version` prints a line containing `0.22.2`, parsed by `/(\d+\.\d+\.\d+)/` | — | — | unverified | T066 |

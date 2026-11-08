@@ -4,7 +4,7 @@ F150-FR-034 to F150-FR-037; research R10.
 
 ## Producer
 
-`specstride-host-hermes watch` (systemd user unit `specstride-hermes-watch.service`, dedicated profile). Per workspace in `watch.json`: `specstride-hermes wait --until-change --cursor <c> --timeout 25` in that workspace.
+`specstride-host-hermes watch` (systemd user unit `specstride-hermes-watch.service`, dedicated profile). One concurrent `specstride-hermes wait --until-change --cursor <c> --timeout 25` per workspace in `watch.json` (cap 16; above it, round-robin with `--timeout 5`). The watcher also forwards `inbox/*.json` host-limit requests through the shim once the engine has the verb (U-150-08), and rewrites `guard.json` each cycle.
 
 ## Line
 
