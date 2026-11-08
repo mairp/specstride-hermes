@@ -1,0 +1,33 @@
+# Written by the mixture-of-loops skill (2026-11-06): keep generated pipeline
+# artifacts out of git status; the contract and its verification plan stay committable.
+.mixture-of-loops/**
+!.mixture-of-loops/**/
+!.mixture-of-loops/**/launch-contract.json
+!.mixture-of-loops/**/verification-commands.json
+!.mixture-of-loops/**/health-check.sh
+.mixture-of-loops/**/generated/
+.mixture-of-loops/**/runs/
+
+# The split (phase 5, 2026-11-11): pipeline state and Spec Kit scaffolding stay
+# local, as they are in the engine repository. The run state under .specstride/
+# holds campaign files that must not enter git history (rule 6 of the split).
+.specstride/
+.specstride*/
+.specify/
+
+# The pinned core: `core-pin.json` and the sha256-pinned tarballs it names under
+# vendor/core/*.tgz are both TRACKED (constitution H4). This fixes dsh's defect, where
+# vendor/core/ was ignored yet a tarball was force-added. Do not ignore vendor/core/.
+node_modules/
+tmp/
+.build/
+
+# Spec corpus and pipeline artifacts stay local (owner, 2026-11-08): the Spec Kit
+# specs, the Specstride / Mixture of Loops contracts, test plans, prompts and
+# research that drove the build. The runtime contracts the build reads live in
+# contracts/ (tracked); specs/<feature>/contracts/ link to them locally.
+specs/
+.mixture-of-loops/
+testautomation/
+prompts/
+research/
