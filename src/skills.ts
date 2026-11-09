@@ -102,8 +102,8 @@ function totalBytesOf(logicalId: string): number {
 }
 
 /** The body of a host skill of this package, read from `skills-src/`. */
-function sourceBodyOf(name: string): string {
-  return readFileSync(join(SKILLS_SRC, name, "SKILL.md"), "utf8");
+function sourceBodyOf(name: string, file = "SKILL.md"): string {
+  return readFileSync(join(SKILLS_SRC, name, file), "utf8");
 }
 
 /** One rendered skill of this host (data-model.md, "SkillRender"). */
@@ -220,7 +220,7 @@ export function hermesSkillRenders(): readonly SkillRender[] {
     totalBytes: totalBytesOf("doctor"),
     assertBodyFitsItsLimit: bodyBudgets.assertBodyFitsItsLimit,
   });
-  const statusBody = sourceBodyOf("status");
+  const statusBody = sourceBodyOf("status", "source.md");
   const curateBody = sourceBodyOf("curate");
   return [
     renderOne({

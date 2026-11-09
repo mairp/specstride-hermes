@@ -1,44 +1,27 @@
-# Python 3.14 — the one subprocess helper (H3, F150-FR-042)
-import json
-import os
+# Python 3.14 — the one subprocess helper of the Specstride plugin (T043,
+# H3, F150-FR-042). No `re`, no business logic, no command table: this module
+# holds exactly one `subprocess.run` wrapper and nothing else; every caller
+# (the glue in `__init__.py` included) goes through `run`, so the pytest
+# suite can intercept all subprocess execution by patching
+# `_forward.subprocess.run`.
 import subprocess
 
-TIMEOUT_SECONDS = 30
-DEFAULT_REPLY = "Specstride not installed - run specstride-host-hermes install"
 
-
-def bin_directory():
-    """The `bin/` next to this package, from the installer's `_paths.json`."""
-    here = os.path.dirname(os.path.abspath(__file__))
+def run(argv, timeout=30, cwd=None):
+    """`subprocess.run(argv, shell=False, capture_output=True, text=True,
+    timeout)`; returns `(exit, stdout, stderr)`. A timeout is
+    `(124, "", "timeout")`; a binary that cannot start is `(127, "", reason)`."""
     try:
-        with open(os.path.join(here, "_paths.json"), "r", encoding="utf-8") as handle:
-            paths = json.load(handle)
-        return paths["bin"]
-    except Exception:
-        return os.path.join(here, "bin")
-
-
-def run(argv, timeout=TIMEOUT_SECONDS):
-    """`subprocess.run(argv, shell=False, timeout)`; the reply is data."""
-    shim = os.path.join(bin_directory(), "specstride-hermes")
-    try:
-        done = subprocess.run([shim] + list(argv), shell=False, timeout=timeout, capture_output=True)
-    except (OSError, subprocess.TimeoutExpired):
-        return DEFAULT_REPLY
-    text = done.stdout.decode("utf-8", "replace").strip()
-    return text if text else DEFAULT_REPLY
-
-
-def command_handler(ctx):
-    """The `specstride` slash/CLI verb: forward the argv verbatim."""
-    return run(ctx.argv)
-
-
-def status_tool(ctx):
-    """Forward `status` through the shim; read-only."""
-    return run(["status"])
-
-
-def doctor_tool(ctx):
-    """Forward the host doctor; read-only."""
-    return run(["doctor"])
+        done = subprocess.run(
+            list(argv),
+            shell=False,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=cwd,
+        )
+    except subprocess.TimeoutExpired:
+        return (124, "", "timeout")
+    except OSError as error:
+        return (127, "", str(error))
+    return (done.returncode, done.stdout or "", done.stderr or "")

@@ -1,0 +1,101 @@
+{
+  "comment": "Golden `/specstride` cases (T038, contracts/150-host-hermes/slash-command.md): one per row, plus the unknown verb, exit 127 and exit 4. `expected_argv` entries `$SHIM` and `$CONTROL` stand for the resolved shim and control-CLI paths. `stub_result` is what the forwarded command printed; `expected_reply` is what the handler relays.",
+  "cases": [
+    {
+      "name": "status relays the status line and attention items verbatim",
+      "raw_args": "status",
+      "cwd": "/work/repo",
+      "expected_argv": ["$SHIM", "status"],
+      "stub_result": { "exit": 0, "stdout": "run feat-150 running · step supervise\nattention: gate contract-review needs you\n", "stderr": "" },
+      "expected_reply": "run feat-150 running · step supervise\nattention: gate contract-review needs you"
+    },
+    {
+      "name": "doctor forwards to the control CLI",
+      "raw_args": "doctor",
+      "cwd": "/work/repo",
+      "expected_argv": ["$CONTROL", "doctor"],
+      "stub_result": { "exit": 0, "stdout": "ok host.cli-found — specstride 0.1.0 on PATH\nwarn host.permission-mode — default profile\n", "stderr": "" },
+      "expected_reply": "ok host.cli-found — specstride 0.1.0 on PATH\nwarn host.permission-mode — default profile"
+    },
+    {
+      "name": "a typed stop is the consent and forwards",
+      "raw_args": "stop",
+      "cwd": "/work/repo",
+      "expected_argv": ["$SHIM", "stop"],
+      "stub_result": { "exit": 0, "stdout": "stopping run feat-150 (graceful)\n", "stderr": "" },
+      "expected_reply": "stopping run feat-150 (graceful)"
+    },
+    {
+      "name": "a typed stop --now forwards the flag",
+      "raw_args": "stop --now",
+      "cwd": "/work/repo",
+      "expected_argv": ["$SHIM", "stop", "--now"],
+      "stub_result": { "exit": 0, "stdout": "stopping run feat-150 (immediate)\n", "stderr": "" },
+      "expected_reply": "stopping run feat-150 (immediate)"
+    },
+    {
+      "name": "a typed resume forwards",
+      "raw_args": "resume",
+      "cwd": "/work/repo",
+      "expected_argv": ["$SHIM", "resume"],
+      "stub_result": { "exit": 0, "stdout": "resumed run feat-150\n", "stderr": "" },
+      "expected_reply": "resumed run feat-150"
+    },
+    {
+      "name": "run replies with the skill invocation and forwards nothing",
+      "raw_args": "run",
+      "cwd": "/work/repo",
+      "expected_argv": null,
+      "stub_result": { "exit": 0, "stdout": "", "stderr": "" },
+      "expected_reply": "type /specstride-run to start (invoking it is the consent)"
+    },
+    {
+      "name": "dry-run replies with the skill invocation in that mode",
+      "raw_args": "dry-run",
+      "cwd": "/work/repo",
+      "expected_argv": null,
+      "stub_result": { "exit": 0, "stdout": "", "stderr": "" },
+      "expected_reply": "type /specstride-run dry-run"
+    },
+    {
+      "name": "an unknown verb is refused with the verb list",
+      "raw_args": "deploy",
+      "cwd": "/work/repo",
+      "expected_argv": null,
+      "stub_result": { "exit": 0, "stdout": "", "stderr": "" },
+      "expected_reply": "refused — verbs: run, dry-run, status, stop, stop --now, resume, doctor"
+    },
+    {
+      "name": "an empty invocation is refused with the verb list",
+      "raw_args": "",
+      "cwd": "/work/repo",
+      "expected_argv": null,
+      "stub_result": { "exit": 0, "stdout": "", "stderr": "" },
+      "expected_reply": "refused — verbs: run, dry-run, status, stop, stop --now, resume, doctor"
+    },
+    {
+      "name": "exit 127 maps to the install line",
+      "raw_args": "status",
+      "cwd": "/work/repo",
+      "expected_argv": ["$SHIM", "status"],
+      "stub_result": { "exit": 127, "stdout": "", "stderr": "specstride-hermes: no specstride CLI on PATH\n" },
+      "expected_reply": "CLI not found — run /specstride doctor"
+    },
+    {
+      "name": "exit 4 relays the refusal line verbatim",
+      "raw_args": "stop",
+      "cwd": "/work/repo",
+      "expected_argv": ["$SHIM", "stop"],
+      "stub_result": { "exit": 4, "stdout": "[SPECSTRIDE-REFUSE] action=protocol reason=protocol-mismatch\n", "stderr": "" },
+      "expected_reply": "[SPECSTRIDE-REFUSE] action=protocol reason=protocol-mismatch"
+    },
+    {
+      "name": "whitespace in the typed verb is collapsed",
+      "raw_args": "stop   --now",
+      "cwd": "/work/repo",
+      "expected_argv": ["$SHIM", "stop", "--now"],
+      "stub_result": { "exit": 0, "stdout": "stopping run feat-150 (immediate)\n", "stderr": "" },
+      "expected_reply": "stopping run feat-150 (immediate)"
+    }
+  ]
+}

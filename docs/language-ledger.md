@@ -9,3 +9,5 @@ looks up Node-written tables. It holds no logic of the product and no regular ex
 | `hermes-plugin/specstride/__init__.py` | Python 3.14 | Hermes loads only Python plugins | none at install (`python_runtime: external`, no deps) | `register(ctx)`; forwards to `bin/specstride-hermes` / control CLI by argv |
 | `hermes-plugin/specstride/_forward.py` | Python 3.14 | the one subprocess helper | — | `subprocess.run(argv, shell=False, timeout)`; golden fixtures |
 | `hermes-plugin/specstride/plugin.yaml` | YAML | manifest | — | Hermes manifest v2 |
+| `hermes-plugin/tests/conftest.py` | Python 3.14 (test-only) | pytest imports the glue as a package, no install | none shipped (`hermes-plugin/tests/` is build-only, never packaged) | `sys.path` insert so `import specstride` resolves |
+| `hermes-plugin/tests/test_command.py` | Python 3.14 (test-only) | drives the registered handler over the shared golden fixtures with `subprocess.run` patched | none shipped (build-only) | asserts argv, replies and `shell=False` parity with the TypeScript reference |
