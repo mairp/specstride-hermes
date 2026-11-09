@@ -221,7 +221,9 @@ export function hermesSkillRenders(): readonly SkillRender[] {
     assertBodyFitsItsLimit: bodyBudgets.assertBodyFitsItsLimit,
   });
   const statusBody = sourceBodyOf("status", "source.md");
-  const curateBody = sourceBodyOf("curate");
+  // T050: the curate body renders from `source.md`, the read-only port of
+  // the source of record (line ids in `retarget.json`), not a SKILL.md draft.
+  const curateBody = sourceBodyOf("curate", "source.md");
   return [
     renderOne({
       logicalId: "specstride-run",

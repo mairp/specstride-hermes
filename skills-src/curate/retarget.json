@@ -1,0 +1,42 @@
+{
+  "schema": "specstride.curate-retarget/1",
+  "sourceOfRecord": "/root/github/agent-skills/specstride-curate/SKILL.md",
+  "sourceCopy": "skills-src/curate/source.md",
+  "prompt": "curate-for-hermes.md",
+  "provenance": "Ported from the original host's curate skill (research R14); every line of the rendered specstride-curate body attributes to `curate-source` (this copy) or a runtime-notes id (F150-FR-032, PT-150-032).",
+  "sections": [
+    { "id": "L-title", "heading": "# Curate the Spec Kit corpus of this repository on Hermes" },
+    { "id": "L-user-input", "heading": "## User Input" },
+    { "id": "L-goal", "heading": "## Goal" },
+    { "id": "L-operating-constraints", "heading": "## Operating Constraints" },
+    { "id": "L-execution-steps", "heading": "## Execution Steps" },
+    { "id": "L-operating-principles", "heading": "## Operating Principles" },
+    { "id": "L-context", "heading": "## Context" }
+  ],
+  "substitutions": [
+    {
+      "from": "the original host (dsh) as the curation target",
+      "to": "the Hermes host (profile `specstride`) as the curation target"
+    },
+    {
+      "from": "scripts/reconcile-specs.sh",
+      "to": "specstride-host-hermes curate reconcile"
+    },
+    {
+      "from": "prompts/curate-for-dsh.md",
+      "to": "curate-for-hermes.md"
+    },
+    {
+      "from": ".specstride/backups/<ts>/ (in the consumer's tree, beside the corpus)",
+      "to": "the reconcile command's own backup directory (its run log lives inside it, nowhere else outside specs/)"
+    },
+    {
+      "from": "generic subagents",
+      "to": "Hermes subagents (`delegate_task`)"
+    },
+    {
+      "from": "the original host's extension facts (plugin model, UI injection points, theming tokens)",
+      "to": "the Hermes host's extension facts (skill roots, plugin manifest, hooks, gateway)"
+    }
+  ]
+}

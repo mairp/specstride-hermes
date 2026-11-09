@@ -14,11 +14,13 @@
  */
 import { run as installerRun } from "../src/installer.ts";
 import { run as doctorRun } from "../src/doctor.ts";
+import { run as curateRun } from "../src/curate/reconcile.ts";
 
 const argv = process.argv.slice(2);
 // The seam `--project <dir>` BEFORE the command fixes the project root; it is
 // consumed here so the dispatcher still sees a command as argv[0].
-const command = argv[0] === "--project" && (argv[2] === "install" || argv[2] === "uninstall")
+const command = argv[0] === "--project" &&
+      ["install", "uninstall", "curate"].includes(argv[2] ?? "")
   ? argv[2]
   : argv[0] ?? "";
 
@@ -37,6 +39,9 @@ switch (command) {
   case "doctor":
     finish(doctorRun(process.argv.slice(2)));
     break;
+  case "curate":
+    finish(curateRun(argv));
+    break;
   case "watch":
   case "eval":
     process.stderr.write(
@@ -50,6 +55,7 @@ switch (command) {
         "                                      [--with-kanban]\n" +
         "       specstride-host-hermes uninstall [--profile <p> | --user | --project]\n" +
         "       specstride-host-hermes doctor [--json]\n" +
+        "       specstride-host-hermes curate reconcile [--dry-run] [--feature <prefix>]\n" +
         "       specstride-host-hermes watch [--once] [--print-unit]\n" +
         "       specstride-host-hermes eval <suite> [--lane paid|local]\n",
     );

@@ -178,7 +178,10 @@ function planFor(root: string, kind: "skills" | "plugin", withReverse: boolean):
       bytes: fs.readFileSync(join(SKILLS_SOURCE, name, "SKILL.md")),
     }));
   }
-  const files = planFromDir(PLUGIN_SOURCE);
+  let files = planFromDir(PLUGIN_SOURCE);
+  // The gated reverse skill is skipped from the bundled set too (F150-FR-031):
+  // neither copy installs where the CLI refuses `reverse`.
+  if (!withReverse) files = files.filter((f) => !f.rel.startsWith(join("skills", "specstride-reverse") + "/"));
   files.push({
     rel: "_paths.json",
     bytes: Buffer.from(JSON.stringify({ packageBin: join(PACKAGE_ROOT, "bin") }, null, 2) + "\n"),
