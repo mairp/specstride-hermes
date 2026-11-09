@@ -1,0 +1,15 @@
+manifest_version: 2
+name: specstride
+version: "0.0.0"
+description: Specstride host for Hermes (thin glue over the specstride-hermes shim).
+author: mairp
+license: Apache-2.0
+kind: general
+python_runtime: external        # nothing installed into Hermes's venv
+capabilities: []
+provides_tools: [specstride_status, specstride_doctor]
+provides_hooks: [pre_llm_call, pre_tool_call, on_session_end]
+requires_hermes: ">=0.22.2,<0.23.0"
+config_schema:
+  specstride.notify.telegram: {type: string, description: "telegram[:chat_id[:thread]] target for notices"}
+  specstride.kanban.actions: {type: boolean, default: false}   # 151
