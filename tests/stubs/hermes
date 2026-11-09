@@ -1,0 +1,33 @@
+#!/usr/bin/env node
+/**
+ * The stub `hermes` binary of the Hermes host's fixtures (T008): the same argv
+ * recorder as the stub CLI, with scripted answers for `--version`,
+ * `plugins enable|disable|list --json`, `send` and `skills list`. A test
+ * asserts the calls the installer and the plugin glue make (F150-FR-022,
+ * F150-FR-034) and lets `$STUB_SCRIPT` override any of them (for example a
+ * failing `send`, F150-FR-037).
+ */
+import { recordAndScript, emit } from "./_recorder.mjs";
+
+const { argv, answer } = recordAndScript();
+
+if (answer !== undefined && answer !== null) emit(answer);
+
+const joined = argv.join(" ");
+const defaults = {
+  "--version": "hermes 0.22.2",
+  "plugins list --json": JSON.stringify({ plugins: [{ name: "specstride", enabled: false }] }),
+  "plugins enable specstride": "specstride: enabled",
+  "plugins disable specstride": "specstride: disabled",
+  send: "sent",
+  "skills list": "specstride-run\nspecstride-status\nspecstride-curate",
+};
+for (const prefix of Object.keys(defaults)) {
+  if (joined === prefix || joined.startsWith(prefix + " ")) {
+    process.stdout.write(defaults[prefix] + "\n");
+    process.exit(0);
+  }
+}
+
+process.stderr.write("stub hermes: no scripted answer for: " + joined + "\n");
+process.exit(2);

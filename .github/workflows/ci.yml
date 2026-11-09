@@ -1,0 +1,64 @@
+# The per-change gate of specs/150-host-hermes (F150-FR-043, H8 v3.1.1, research
+# R12): one CI job `test` that runs the gate with model providers unreachable
+# and records 0 model calls. The gate is
+#
+#     npm run pin:check && npm run build && npm test && npm run conformance \
+#       && hermes plugins validate hermes-plugin/specstride
+#
+# and never calls a model or a paid API.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14.7"
+
+      # Hermes is consumed on PATH, never a dependency (H4): the pinned
+      # hermes-agent is installed into a runner-local venv so the gate's
+      # `hermes plugins validate` step can run (OD-6, U-150-12). The commit
+      # is the one the host-facts table is pinned to (0.22.2, d923a5eb48).
+      - name: Install pinned hermes-agent
+        run: |
+          python -m venv .venv-hermes
+          .venv-hermes/bin/pip install \
+            "hermes-agent @ git+https://github.com/hermes-agent/hermes-agent@d923a5eb48"
+          echo "$PWD/.venv-hermes/bin" >> "$GITHUB_PATH"
+
+      # Research R12: no provider credential is set, and outbound traffic to
+      # every host except GitHub and the npm registry is rejected before the
+      # gate runs. pypi.org and files.pythonhosted.org stay open only until
+      # the Hermes install step above has finished.
+      - name: Block model providers
+        run: |
+          sudo iptables -A OUTPUT -d github.com -j ACCEPT || true
+          sudo iptables -A OUTPUT -d registry.npmjs.org -j ACCEPT || true
+          sudo iptables -A OUTPUT -p tcp -j REJECT --reject-with tcp-reset || true
+          env | grep -iE '(^|_)(API_KEY|ANTHROPIC|OPENAI|DEEPSEEK|GEMINI)' && exit 1 || true
+
+      - name: Install dependencies
+        run: npm install
+
+      # The gate, run behind a resolver hook that fails the run when a
+      # provider hostname from tests/helpers/provider-hosts.json is looked up
+      # (F150-SC-004: 0 model calls).
+      - name: Gate
+        run: npm run gate
+        env:
+          NODE_OPTIONS: "--import=./tests/helpers/no-model-dns.mjs"
+
+      - name: Python glue tests
+        run: python -m pytest hermes-plugin/tests

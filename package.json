@@ -1,0 +1,44 @@
+{
+  "name": "@specstride/host-hermes",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "description": "The Hermes host of Specstride (specs/150-host-hermes): the third implementation of the host port EP-01 (specstride.host/1), rendering the host-kit skills through a Hermes profile, with the shim specstride-hermes, an installer with an install record, the eight host.* doctor checks, the thin specstride plugin glue, Telegram push notices and the session-log eval driver. Everything of the engine arrives through the pinned core tarballs in vendor/core/; Hermes itself is consumed on PATH, never a dependency.",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "specstride-host-hermes": "bin/specstride-host-hermes.mjs",
+    "specstride-hermes": "bin/specstride-hermes.mjs"
+  },
+  "files": [
+    "bin/",
+    "skills/",
+    "hermes-plugin/specstride/",
+    "systemd/"
+  ],
+  "specstride": {
+    "protocol": {
+      "min": 1,
+      "max": 1
+    },
+    "engineVersion": "0.1.0"
+  },
+  "scripts": {
+    "pin": "node scripts/core-pin.mjs",
+    "pin:check": "node scripts/core-pin.mjs --check",
+    "build": "node --experimental-strip-types scripts/build.ts",
+    "test": "node --experimental-strip-types --test \"tests/**/*.test.ts\"",
+    "conformance": "node --experimental-strip-types scripts/conformance.ts",
+    "gate": "npm run pin:check && npm run build && npm test && npm run conformance && hermes plugins validate hermes-plugin/specstride"
+  },
+  "dependencies": {
+    "@specstride/contracts": "file:vendor/core/specstride-contracts-0.1.0.tgz",
+    "@specstride/host-kit": "file:vendor/core/specstride-host-kit-0.1.0.tgz"
+  },
+  "devDependencies": {
+    "@specstride/testkit": "file:vendor/core/specstride-testkit-0.1.0.tgz",
+    "specstride": "file:vendor/core/specstride-0.1.0.tgz"
+  }
+}

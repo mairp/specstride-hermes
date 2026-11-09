@@ -1,0 +1,10 @@
+# Mergify of specs/150-host-hermes: merge only when the per-change gate
+# (`test`) passed (F150-FR-043; PT-150-043).
+pull_request_rules:
+  - name: require the gate before merge
+    conditions:
+      - "check-success=test"
+      - "-draft"
+    actions:
+      merge:
+        method: merge

@@ -31,3 +31,24 @@ specs/
 testautomation/
 prompts/
 research/
+
+# Speckit / Specstride artifacts stay local (explicit, owner request 2026-11-08):
+# Spec Kit scaffolding and memory, Specstride run state, task specs, the prompt
+# kit, the research corpus, verification/test-plan artifacts, and the flat spec
+# entry file. Nothing under these paths ever enters git history.
+.specify/
+.specify/**
+.specstride/
+.specstride*/
+SPECS.md
+SPECS*.md
+specs/**
+prompts/**
+research/**
+testautomation/**
+
+# The runtime contracts the build reads stay tracked (plan of 150: contracts/
+# are mirrors the build reads); only the ignore block above them, which names
+# bare path stems, must not swallow them.
+!contracts/
+!contracts/**

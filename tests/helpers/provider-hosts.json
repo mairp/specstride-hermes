@@ -1,0 +1,13 @@
+{
+  "comment": "Provider hostnames the CI resolver hook refuses to resolve (F150-SC-004: the gate makes 0 model calls). Extend freely; no model host may ever be reachable from the gate.",
+  "hosts": [
+    "api.anthropic.com",
+    "api.openai.com",
+    "api.deepseek.com",
+    "generativelanguage.googleapis.com",
+    "openrouter.ai",
+    "api.x.ai",
+    "api.mistral.ai",
+    "api.groq.com"
+  ]
+}

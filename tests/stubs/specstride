@@ -1,0 +1,28 @@
+#!/usr/bin/env node
+/**
+ * The stub Specstride CLI of the Hermes host's fixtures (T008): a Node
+ * executable that records its argv and cwd to `$STUB_LOG`, answers
+ * `--protocol` with `$STUB_PROTOCOL` (default `1`), answers other verbs from
+ * `$STUB_SCRIPT` (an argv-prefix → {stdout, stderr, exit} map), and exits 3
+ * with `reverse specification is not in this build` for `reverse` unless the
+ * script says otherwise (F150-FR-031, U-150-05).
+ */
+import { recordAndScript, emit } from "./_recorder.mjs";
+
+const { argv, answer } = recordAndScript();
+
+if (argv.includes("--protocol")) {
+  if (answer !== undefined && answer !== null) emit(answer);
+  process.stdout.write(String(process.env.STUB_PROTOCOL ?? "1") + "\n");
+  process.exit(0);
+}
+
+if (answer !== undefined && answer !== null) emit(answer);
+
+if (argv[0] === "reverse") {
+  process.stderr.write("reverse specification is not in this build\n");
+  process.exit(3);
+}
+
+process.stderr.write("stub specstride: no scripted answer for: " + argv.join(" ") + "\n");
+process.exit(2);
