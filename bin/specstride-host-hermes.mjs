@@ -4,9 +4,9 @@
  * installer-cli.md): `specstride-host-hermes
  * install|uninstall|doctor|watch|eval`. The dispatcher forwards the rest of
  * the argv to the module that owns the command — the installer
- * (`src/installer.ts`), the doctor (`src/doctor.ts`), the watcher (T057) and
- * the eval driver (T068) — and exits with that module's exit code. A usage
- * error exits 3.
+ * (`src/installer.ts`), the doctor (`src/doctor.ts`), the watcher
+ * (`src/watch/index.ts`, T057) and the eval driver (T068) — and exits with
+ * that module's exit code. A usage error exits 3.
  *
  * Source of record: `scripts/specstride-host-hermes.mjs`; `npm run build`
  * copies it to `bin/specstride-host-hermes.mjs` with mode 755 (the build
@@ -42,10 +42,16 @@ switch (command) {
   case "curate":
     finish(curateRun(argv));
     break;
-  case "watch":
+  case "watch": {
+    // No process.exit here: a pending stderr line must still reach the log,
+    // and a continuous watcher simply never drains.
+    const { runWatch } = await import("../src/watch/index.ts");
+    process.exitCode = await runWatch(argv.slice(1));
+    break;
+  }
   case "eval":
     process.stderr.write(
-      `specstride-host-hermes: ${command} is wired by a later task of this feature (watch: T057, eval: T068)\n`,
+      `specstride-host-hermes: eval is wired by a later task of this feature (eval: T068)\n`,
     );
     process.exit(3);
     break;

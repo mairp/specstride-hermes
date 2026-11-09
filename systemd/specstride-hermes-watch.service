@@ -1,0 +1,12 @@
+[Unit]
+Description=Specstride watcher for Hermes (notices and precomputed status lines)
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=specstride-host-hermes watch
+Restart=on-failure
+Environment=HERMES_HOME=%h/.hermes
+
+[Install]
+WantedBy=default.target
