@@ -13,7 +13,7 @@
  * - a file whose sha256 matches an engine tarball file (F150-SC-007);
  * - a shim named `specstride` (contracts/shim.md, F150-FR-014).
  */
-import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
@@ -101,6 +101,15 @@ mkdirSync(join(ROOT, "bin"), { recursive: true });
 writeFileSync(shimPath, hermesShimScript());
 chmodSync(shimPath, 0o755);
 written.push(shimPath);
+
+// The control CLI (T031): its source of record is
+// `scripts/specstride-host-hermes.mjs`; the build copies it beside the shim.
+const controlSource = join(ROOT, "scripts", "specstride-host-hermes.mjs");
+const controlPath = join(ROOT, "bin", "specstride-host-hermes.mjs");
+if (!existsSync(controlSource)) fail("the control CLI source scripts/specstride-host-hermes.mjs is missing");
+writeFileSync(controlPath, readFileSync(controlSource));
+chmodSync(controlPath, 0o755);
+written.push(controlPath);
 
 // The whole static gate set must pass the built tree.
 for (const finding of allGateFindings(ROOT)) fail(finding);

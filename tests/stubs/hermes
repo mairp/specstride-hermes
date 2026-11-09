@@ -2,28 +2,76 @@
 /**
  * The stub `hermes` binary of the Hermes host's fixtures (T008): the same argv
  * recorder as the stub CLI, with scripted answers for `--version`,
- * `plugins enable|disable|list --json`, `send` and `skills list`. A test
- * asserts the calls the installer and the plugin glue make (F150-FR-022,
- * F150-FR-034) and lets `$STUB_SCRIPT` override any of them (for example a
- * failing `send`, F150-FR-037).
+ * `plugins enable|disable|list --json`, `config get <key>`, `send` and
+ * `skills list`. A test asserts the calls the installer, the doctor and the
+ * plugin glue make (F150-FR-022, F150-SC-002) and lets the environment
+ * override any of them:
+ *
+ * - `$STUB_SCRIPT` — an argv-prefix → {stdout, stderr, exit} map, as in the
+ *   stub CLI (the longest matching prefix wins, an exact match always does);
+ * - `$STUB_HERMES_VERSION` — the `--version` line (default `hermes 0.22.2`);
+ * - `$STUB_PLUGINS` — the `plugins list --json` body (a `{plugins: [...]}`);
+ * - `$STUB_CONFIG` — a config-key → value map for `config get <key>`;
+ * - a failing `send` for F150-FR-037.
+ *
+ * Matching ignores a leading `-p <profile>` pair, so the doctor's
+ * `hermes -p specstride plugins list --json` meets the same scripts as a bare
+ * call. An unmatched call exits 2 with the unmatched argv on stderr.
  */
 import { recordAndScript, emit } from "./_recorder.mjs";
 
 const { argv, answer } = recordAndScript();
 
+const joined = argv.join(" ");
+// The profile selector never changes what a verb means in the fixtures.
+const normalized = (() => {
+  const parts = [];
+  for (let i = 0; i < argv.length; i += 1) {
+    if (argv[i] === "-p") { i += 1; continue; }
+    parts.push(argv[i]);
+  }
+  return parts.join(" ");
+})();
+
 if (answer !== undefined && answer !== null) emit(answer);
 
-const joined = argv.join(" ");
+if (joined === "--version" || normalized === "--version") {
+  process.stdout.write(`hermes ${process.env.STUB_HERMES_VERSION ?? "0.22.2"}\n`);
+  process.exit(0);
+}
+
+if (normalized === "plugins list --json" || normalized.startsWith("plugins list")) {
+  const body = process.env.STUB_PLUGINS
+    ? process.env.STUB_PLUGINS
+    : JSON.stringify({ plugins: [{ name: "specstride", enabled: false }] });
+  process.stdout.write(body + "\n");
+  process.exit(0);
+}
+
+if (normalized.startsWith("config get ")) {
+  const key = normalized.slice("config get ".length).trim();
+  let config = { "terminal.backend": "local", "approvals.mode": "ask" };
+  try {
+    if (process.env.STUB_CONFIG) config = { ...config, ...JSON.parse(process.env.STUB_CONFIG) };
+  } catch {
+    // An unreadable STUB_CONFIG leaves the defaults in place.
+  }
+  if (key in config) {
+    process.stdout.write(String(config[key]) + "\n");
+    process.exit(0);
+  }
+  process.stderr.write(`stub hermes: no config value for ${key}\n`);
+  process.exit(2);
+}
+
 const defaults = {
-  "--version": "hermes 0.22.2",
-  "plugins list --json": JSON.stringify({ plugins: [{ name: "specstride", enabled: false }] }),
   "plugins enable specstride": "specstride: enabled",
   "plugins disable specstride": "specstride: disabled",
   send: "sent",
   "skills list": "specstride-run\nspecstride-status\nspecstride-curate",
 };
 for (const prefix of Object.keys(defaults)) {
-  if (joined === prefix || joined.startsWith(prefix + " ")) {
+  if (normalized === prefix || normalized.startsWith(prefix + " ")) {
     process.stdout.write(defaults[prefix] + "\n");
     process.exit(0);
   }

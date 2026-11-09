@@ -29,7 +29,7 @@
     "pin": "node scripts/core-pin.mjs",
     "pin:check": "node scripts/core-pin.mjs --check",
     "build": "node --experimental-strip-types scripts/build.ts",
-    "test": "node --experimental-strip-types --test \"tests/**/*.test.ts\"",
+    "test": "node --experimental-strip-types --test --test-concurrency=1 \"tests/**/*.test.ts\"",
     "conformance": "node --experimental-strip-types scripts/conformance.ts",
     "gate": "npm run pin:check && npm run build && npm test && npm run conformance && hermes plugins validate hermes-plugin/specstride"
   },
