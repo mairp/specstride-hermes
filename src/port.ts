@@ -2,8 +2,8 @@
  * The Hermes implementation of the host port `specstride.host/1` (T021,
  * annex H §H.1): the `HostPort` object of the contracts, bound to this
  * host's profile, descriptions, declarations and renders. `evalDriver.run`
- * is wired in T068; the field is present from this phase on, and its run
- * refuses until then rather than pretending.
+ * is the paid session runner of `src/evals/driver.ts` (T068), refused under
+ * CI and without a model in the run configuration.
  */
 import {
   type HostArtifact,
@@ -117,8 +117,14 @@ export const hermesPort: HostPort = {
     return renderStatusHooks(statusLineLogicalName);
   },
   evalDriver: {
-    async run(_suite: readonly TriggerCase[]): Promise<readonly TriggerResult[]> {
-      throw new Error("the eval driver is wired in T068; the port carries the field only");
+    // Wired in T068: the same paid session runner the `eval` command uses,
+    // through the port's own case shape. It refuses under CI and without a
+    // model in the run configuration (SPECSTRIDE_EVAL_MODEL).
+    async run(suite: readonly TriggerCase[]): Promise<readonly TriggerResult[]> {
+      const { runPortCases } = await import("./evals/driver.ts");
+      const model = process.env.SPECSTRIDE_EVAL_MODEL;
+      const modelIds = model === undefined || model === "" ? [] : [model];
+      return await runPortCases(suite, { lane: "paid", modelIds });
     },
   },
 };

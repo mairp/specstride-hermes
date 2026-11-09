@@ -1,0 +1,15 @@
+{
+  "comment": "The lanes a person may start (F150-FR-047, F150-FR-048). Neither is a check of a change: the build never starts a suite runner (H8).",
+  "paid": {
+    "audience": "release",
+    "startedBy": "person",
+    "releaseCheck": true,
+    "loggedFields": ["date", "modelIds", "calls", "cost", "skillTextsHash"]
+  },
+  "local": {
+    "audience": "personal",
+    "startedBy": "person",
+    "releaseCheck": false,
+    "comment": "the local-model lane serves the personal audience only (F150-FR-048) and is never a release check"
+  }
+}

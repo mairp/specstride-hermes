@@ -1,0 +1,78 @@
+{
+  "skill": "specstride-status",
+  "cases": [
+    {
+      "id": "status-p01",
+      "kind": "positive",
+      "prompt": "Show me the status of the current specstride run.",
+      "expected": "specstride-status"
+    },
+    {
+      "id": "status-p02",
+      "kind": "positive",
+      "prompt": "specstride status, please.",
+      "expected": "specstride-status"
+    },
+    {
+      "id": "status-p03",
+      "kind": "positive",
+      "prompt": "What is the specstride run doing right now, and what needs my attention?",
+      "expected": "specstride-status"
+    },
+    {
+      "id": "status-p04",
+      "kind": "positive",
+      "prompt": "Give me the terse status line of the specstride run in this workspace.",
+      "expected": "specstride-status"
+    },
+    {
+      "id": "status-p05",
+      "kind": "positive",
+      "prompt": "Check on the running specstride feature.",
+      "expected": "specstride-status"
+    },
+    {
+      "id": "status-p06",
+      "kind": "positive",
+      "prompt": "Any attention items on the specstride run?",
+      "expected": "specstride-status"
+    },
+    {
+      "id": "status-n01",
+      "kind": "negative",
+      "prompt": "Launch a specstride run on this repository.",
+      "expected": null
+    },
+    {
+      "id": "status-n02",
+      "kind": "negative",
+      "prompt": "Stop the running specstride feature.",
+      "expected": null
+    },
+    {
+      "id": "status-n03",
+      "kind": "negative",
+      "prompt": "Resume the paused specstride run.",
+      "expected": null
+    },
+    {
+      "id": "status-n04",
+      "kind": "cross-skill",
+      "prompt": "Reverse the existing sources into a spec kit specification.",
+      "expected": null,
+      "confusablePair": "run/reverse"
+    },
+    {
+      "id": "status-n05",
+      "kind": "negative",
+      "prompt": "Run the unit tests of this repository.",
+      "expected": null
+    },
+    {
+      "id": "status-n06",
+      "kind": "negative",
+      "prompt": "Print the git status of this repository.",
+      "expected": null
+    }
+  ]
+}

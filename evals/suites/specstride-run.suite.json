@@ -1,0 +1,17 @@
+{
+  "skill": "specstride-run",
+  "cases": [
+    { "id": "run-p01", "kind": "positive", "prompt": "Use specstride-run to derive and launch the finished features of this repository.", "expected": "specstride-run" },
+    { "id": "run-p02", "kind": "positive", "prompt": "specstride: start a run over the features that are done.", "expected": "specstride-run" },
+    { "id": "run-p03", "kind": "positive", "prompt": "Launch a specstride run on this repository.", "expected": "specstride-run" },
+    { "id": "run-p04", "kind": "positive", "prompt": "Please run specstride on the completed features.", "expected": "specstride-run" },
+    { "id": "run-p05", "kind": "positive", "prompt": "specstride-run the finished work in this repo.", "expected": "specstride-run" },
+    { "id": "run-p06", "kind": "positive", "prompt": "Derive the launch contract and launch the remaining spec kit features.", "expected": "specstride-run" },
+    { "id": "run-n01", "kind": "negative", "prompt": "What is the status of the specstride run?", "expected": null },
+    { "id": "run-n02", "kind": "cross-skill", "prompt": "Reverse the existing sources of this repository into a spec kit specification.", "expected": null, "confusablePair": "run/reverse" },
+    { "id": "run-n03", "kind": "negative", "prompt": "Stop the running specstride feature.", "expected": null },
+    { "id": "run-n04", "kind": "negative", "prompt": "Run the unit tests of this repository with npm test.", "expected": null },
+    { "id": "run-n05", "kind": "negative", "prompt": "Curate the spec corpus of this repository for hermes.", "expected": null },
+    { "id": "run-n06", "kind": "negative", "prompt": "How does the specstride doctor fix a missing CLI?", "expected": null }
+  ]
+}

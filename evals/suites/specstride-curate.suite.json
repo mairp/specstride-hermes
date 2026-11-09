@@ -1,0 +1,17 @@
+{
+  "skill": "specstride-curate",
+  "cases": [
+    { "id": "curate-p01", "kind": "positive", "prompt": "Curate the spec corpus of this repository for hermes.", "expected": "specstride-curate" },
+    { "id": "curate-p02", "kind": "positive", "prompt": "specstride-curate the specs/ directory, retargeted to the hermes host.", "expected": "specstride-curate" },
+    { "id": "curate-p03", "kind": "positive", "prompt": "Run the deterministic reconciliation of the spec corpus, with a backup first.", "expected": "specstride-curate" },
+    { "id": "curate-p04", "kind": "positive", "prompt": "Refresh the per-feature logs of every feature in specs/.", "expected": "specstride-curate" },
+    { "id": "curate-p05", "kind": "positive", "prompt": "Retarget the spec kit corpus to the hermes host.", "expected": "specstride-curate" },
+    { "id": "curate-p06", "kind": "positive", "prompt": "Reconcile the cross-artifact references of the spec corpus.", "expected": "specstride-curate" },
+    { "id": "curate-n01", "kind": "negative", "prompt": "Reverse the existing sources into a spec kit specification.", "expected": null },
+    { "id": "curate-n02", "kind": "cross-skill", "prompt": "Run the finished features of this repository with specstride.", "expected": null, "confusablePair": "run/reverse" },
+    { "id": "curate-n03", "kind": "negative", "prompt": "Reconcile the git branches of this repository.", "expected": null },
+    { "id": "curate-n04", "kind": "negative", "prompt": "Rewrite the constitution of this repository.", "expected": null },
+    { "id": "curate-n05", "kind": "negative", "prompt": "What is the status of the specstride run?", "expected": null },
+    { "id": "curate-n06", "kind": "negative", "prompt": "Edit the source of this repository to match the specs.", "expected": null }
+  ]
+}

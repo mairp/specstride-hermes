@@ -1,0 +1,5 @@
+{"type":"system","event":"init","session":"s-other-01","cwd":"/repo","hermes":"0.22.2"}
+{"type":"user","text":"Show me the status of the current specstride run."}
+{"type":"tool_use","id":"t1","name":"skill_view","input":{"name":"specstride-status"}}
+{"type":"tool_result","id":"t1","content":"skill specstride-status loaded"}
+{"type":"result","exit_code":0}

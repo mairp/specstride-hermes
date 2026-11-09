@@ -1,0 +1,17 @@
+{
+  "skill": "specstride-reverse",
+  "cases": [
+    { "id": "reverse-p01", "kind": "positive", "prompt": "Reverse the existing sources of this repository into a spec kit specification.", "expected": "specstride-reverse" },
+    { "id": "reverse-p02", "kind": "positive", "prompt": "specstride-reverse this repository: it has no specs yet.", "expected": "specstride-reverse" },
+    { "id": "reverse-p03", "kind": "positive", "prompt": "Take the inventory of the sources and reverse-specify them.", "expected": "specstride-reverse" },
+    { "id": "reverse-p04", "kind": "positive", "prompt": "Plan the reverse run for this codebase.", "expected": "specstride-reverse" },
+    { "id": "reverse-p05", "kind": "positive", "prompt": "Derive a spec kit feature set from the code that exists here.", "expected": "specstride-reverse" },
+    { "id": "reverse-p06", "kind": "positive", "prompt": "Use specstride-reverse on this repository without a specs/ directory.", "expected": "specstride-reverse" },
+    { "id": "reverse-n01", "kind": "cross-skill", "prompt": "Run the finished features of this repository with specstride.", "expected": null, "confusablePair": "run/reverse" },
+    { "id": "reverse-n02", "kind": "negative", "prompt": "What is the status of the specstride run?", "expected": null },
+    { "id": "reverse-n03", "kind": "negative", "prompt": "Curate the spec corpus for hermes.", "expected": null },
+    { "id": "reverse-n04", "kind": "negative", "prompt": "Stop the running specstride feature.", "expected": null },
+    { "id": "reverse-n05", "kind": "negative", "prompt": "Reverse the changes of the last commit with git revert.", "expected": null },
+    { "id": "reverse-n06", "kind": "negative", "prompt": "Run the linter over the changed files.", "expected": null }
+  ]
+}

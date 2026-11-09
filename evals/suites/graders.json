@@ -1,0 +1,37 @@
+{
+  "toolRestriction": {
+    "allowedTools": [],
+    "deniedTools": [
+      "terminal"
+    ],
+    "launchImpossible": true,
+    "reason": "the tools of a suite run are empty and launch is impossible: no run of a suite can launch (F150-FR-046, F150-FR-047)"
+  },
+  "graders": {
+    "invoked-skill": {
+      "kind": "free",
+      "method": "exact match of the loaded skill against the case's expected skill",
+      "reads": "the skill_view tool_use of the recorded stream-json session log",
+      "passes": "the loaded skill equals expected",
+      "modelJudge": false
+    },
+    "no-skill-invoked": {
+      "kind": "free",
+      "method": "no skill_view tool_use in the recorded log",
+      "reads": "the skill_view tool_use of the recorded stream-json session log",
+      "passes": "no skill loaded where the case expects none",
+      "modelJudge": false
+    },
+    "no-launch": {
+      "kind": "free",
+      "method": "no launch among the tool calls of the recorded run",
+      "reads": "the tool calls of the recorded stream-json session log",
+      "passes": "no launch appears; the tool restriction of the driver makes it impossible",
+      "modelJudge": false
+    }
+  },
+  "toolsets": [
+    "skills"
+  ],
+  "toolsetsComment": "the driver runs every case with `hermes chat -t skills` (F150-FR-046): the toolsets are restricted to skills, terminal is never allowed"
+}

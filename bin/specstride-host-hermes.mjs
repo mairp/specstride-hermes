@@ -49,12 +49,12 @@ switch (command) {
     process.exitCode = await runWatch(argv.slice(1));
     break;
   }
-  case "eval":
-    process.stderr.write(
-      `specstride-host-hermes: eval is wired by a later task of this feature (eval: T068)\n`,
-    );
-    process.exit(3);
+  case "eval": {
+    // The paid lane (T068): a person starts it, the build never does.
+    const { runEval } = await import("../src/evals/driver.ts");
+    finish(await runEval(argv.slice(1)));
     break;
+  }
   default:
     process.stderr.write(
       "usage: specstride-host-hermes install [--profile <p> | --user | --project]\n" +
