@@ -28,6 +28,7 @@ import { parseFrontmatter } from "./frontmatter.ts";
 import { rootsOf, cliAcceptsReverse } from "./installer.ts";
 import { thisPackageProtocolRange } from "./shim.ts";
 import { MISMATCH_LINE, MISSING_CLI_COMMAND } from "@specstride/host-kit";
+import { writeGuard } from "./guard.ts";
 
 export type CliResult = { readonly exit: number; readonly stdout: string; readonly stderr: string };
 export type Severity = "ok" | "info" | "warn" | "fail";
@@ -489,6 +490,13 @@ export function run(argv: readonly string[]): CliResult {
   const findings = ordered(collectFindings());
   const exit = findings.some((f) => f.severity === "fail") ? 2 : 0;
   writeDoctorLast(findings, exit);
+  // The guardrail table follows the doctor result (T061, F150-FR-040): a
+  // failure to rewrite it is dropped, never fatal — the hook fails open.
+  try {
+    writeGuard(hermesHome());
+  } catch {
+    // ignored: the hook reads the last table, or none, and does nothing
+  }
   if (args.includes("--json")) {
     const payload = {
       schema: "specstride.doctor-report/1",

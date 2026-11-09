@@ -138,3 +138,164 @@ export function runSlashCommand(
     reply: replyFor(decision, rawArgs, stub),
   };
 }
+
+// ---------------------------------------------------------------------------
+// The reference hooks of US6 (T060/T061, contracts/150-host-hermes/
+// plugin-manifest.md): the TypeScript reference of the four hook behaviours
+// the Python glue under `hermes-plugin/specstride/` implements. Pure file
+// reads, equality checks and one atomic file write — no subprocess, no
+// decision beyond a lookup in a Node-written table (H3, F150-SC). The pytest
+// suite proves the Python hooks agree case by case over
+// `tests/glue-fixtures/hooks.json`.
+// ---------------------------------------------------------------------------
+
+import { createHash } from "node:crypto";
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { matchRule, readGuard, type GuardTable } from "./guard.ts";
+
+/** The session sources in which the pre_* hooks stay silent (F150-FR-041). */
+export const SILENT_SOURCES: readonly string[] = Object.freeze(["kanban", "cron"]);
+
+/** The status files of a workspace, as the watcher writes them. */
+export function hookStatusPaths(
+  home: string,
+  workspace: string,
+): { readonly lineFile: string; readonly seqFile: string } {
+  const key = createHash("sha256").update(workspace, "utf8").digest("hex").slice(0, 16);
+  const directory = join(home, "specstride-host", "status");
+  return { lineFile: join(directory, key + ".line"), seqFile: join(directory, key + ".seq") };
+}
+
+/** Whether the environment silences the pre_* hooks. */
+export function hookIsSilent(source: string | null, child: boolean): boolean {
+  return child || (source !== null && SILENT_SOURCES.includes(source));
+}
+
+/** Read the precomputed line; unreadable or absent → null (fail open). */
+export function readHookLine(home: string, workspace: string): string | null {
+  try {
+    return readFileSync(hookStatusPaths(home, workspace).lineFile, "utf8").replace(/\n$/, "");
+  } catch {
+    return null;
+  }
+}
+
+/** Read the precomputed counter; unreadable or absent → null. */
+export function readHookSeq(home: string, workspace: string): number | null {
+  try {
+    const parsed = Number.parseInt(readFileSync(hookStatusPaths(home, workspace).seqFile, "utf8").trim(), 10);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The payload the hooks read off the recorded call. */
+export type HookPayload = {
+  readonly home: string;
+  readonly workspace: string;
+  readonly sessionId: string;
+  readonly source: string | null;
+  readonly child: boolean;
+  readonly isFirstTurn: boolean;
+  /** The counter this session was last given; null when none was given. */
+  readonly lastSeqGiven: number | null;
+  readonly command: string | null;
+  readonly turnExitReason: string | null;
+  readonly provider: string | null;
+};
+
+/** The context return of the two `pre_llm_call` rows. */
+export type ContextReturn = { readonly context: string };
+
+/** A block return of `pre_tool_call`; the hook never approves (Principle II). */
+export type BlockReturn = { readonly decision: "block"; readonly reason: string; readonly fix: string };
+
+/**
+ * `pre_llm_call` (session start and prompt, F150-FR-038, F150-FR-039): the
+ * precomputed line once at the first turn when a run exists; on later turns
+ * only when the `.seq` counter differs from the one last given in this
+ * session. Silent in a Kanban worker, a cron session and a run's own child.
+ */
+export function preLlmCall(payload: HookPayload): ContextReturn | null {
+  if (hookIsSilent(payload.source, payload.child)) return null;
+  const line = readHookLine(payload.home, payload.workspace);
+  if (line === null || line === "") return null;
+  const seq = readHookSeq(payload.home, payload.workspace);
+  if (!payload.isFirstTurn) {
+    if (payload.lastSeqGiven !== null && seq === payload.lastSeqGiven) return null;
+  }
+  return { context: "Specstride: " + line };
+}
+
+/**
+ * `pre_tool_call` (F150-FR-040): apply the table of `guard.json` to the
+ * command string; a launch while the doctor result blocks is refused with
+ * the doctor's fix. Missing or invalid table → null (fail open); the hook
+ * never approves.
+ */
+export function preToolCall(
+  payload: HookPayload,
+  guard: GuardTable | null,
+): BlockReturn | null {
+  if (hookIsSilent(payload.source, payload.child)) return null;
+  const command = payload.command ?? "";
+  if (!command.includes("launch")) return null;
+  if (guard === null || typeof guard.blocking !== "boolean" || !Array.isArray(guard.rules)) {
+    return null;
+  }
+  if (guard.blocking) {
+    return {
+      decision: "block",
+      reason: "the last doctor result holds a launch-blocking finding",
+      fix: guard.fix ?? "run specstride-host-hermes doctor",
+    };
+  }
+  const hit = matchRule(command, guard.rules);
+  if (hit === null) return null;
+  return { decision: "block", reason: hit.reason, fix: hit.fix };
+}
+
+/** The host-limit request file of `on_session_end`. */
+export type LimitRequest = {
+  readonly kind: "host-limit";
+  readonly sessionId: string;
+  readonly provider: string;
+  readonly at: string;
+};
+
+/** True when the recorded exit reason is a provider usage limit. */
+export function isUsageLimit(reason: string | null): boolean {
+  return reason !== null && reason.includes("usage_limit");
+}
+
+/**
+ * `on_session_end` (F150-FR-041): a provider usage limit in a run's own
+ * child session writes one atomic request file the watcher forwards later;
+ * it spawns nothing and returns nothing.
+ */
+export function onSessionEnd(
+  payload: HookPayload,
+  at: string,
+): { readonly path: string; readonly request: LimitRequest } | null {
+  if (!payload.child) return null;
+  if (!isUsageLimit(payload.turnExitReason)) return null;
+  const request: LimitRequest = {
+    kind: "host-limit",
+    sessionId: payload.sessionId,
+    provider: payload.provider ?? "unknown",
+    at,
+  };
+  const path = join(payload.home, "specstride-host", "inbox", payload.sessionId + ".json");
+  const temporary = path + ".tmp";
+  mkdirSync(join(path, ".."), { recursive: true });
+  writeFileSync(temporary, JSON.stringify(request, null, 2) + "\n");
+  renameSync(temporary, path);
+  return { path, request };
+}
+
+/** The guard table of a home, read the way the Python hook reads it. */
+export function guardTableOf(home: string): GuardTable | null {
+  return readGuard(home);
+}

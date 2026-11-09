@@ -129,3 +129,179 @@ test("normalization collapses whitespace and tolerates a leading slash", () => {
   assert.equal(normalizeSlashArgs("/status"), "status");
   assert.deepEqual(decideSlashArgs("/stop --now", PATHS, CWD).argv, [SHIM, "stop", "--now"]);
 });
+
+// ---------------------------------------------------------------------------
+// The hooks mirror (T060, PT-150-038 to PT-150-042, US6): the TypeScript
+// reference hook functions of `src/glue-reference.ts` run over EVERY case of
+// `tests/glue-fixtures/hooks.json` — the same golden file the pytest suite
+// drives the registered Python hooks with.
+// ---------------------------------------------------------------------------
+import { mkdirSync, mkdtempSync, writeFileSync, rmSync, readdirSync, existsSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { readFile as fsReadFile } from "node:fs/promises";
+import { GUARD_RULES } from "../../src/guard.ts";
+import {
+  guardTableOf,
+  hookStatusPaths,
+  onSessionEnd,
+  preLlmCall,
+  preToolCall,
+  type HookPayload,
+} from "../../src/glue-reference.ts";
+
+const SHIM_LAUNCH = "specstride-hermes launch --comment ship the parser";
+
+const HOOKS = JSON.parse(
+  readFileSync(join(HERE, "..", "glue-fixtures", "hooks.json"), "utf8"),
+) as {
+  workspace: string;
+  key: string;
+  cases: {
+    name: string;
+    hook: string;
+    files: Record<string, string | Record<string, unknown>>;
+    unreadable?: string;
+    payload: {
+      workspace: string;
+      session_id: string;
+      source: string | null;
+      child: boolean;
+      is_first_turn: boolean;
+      last_seq_given: number | null;
+      command: string | null;
+      turn_exit_reason: string | null;
+      provider: string | null;
+    };
+    expected: Record<string, string> | null;
+    expect_file: Record<string, string> | null;
+  }[];
+};
+
+/** Build a temporary HERMES_HOME holding the case's files. */
+function prepareHome(item: (typeof HOOKS.cases)[number]): string {
+  const home = mkdtempSync(join(tmpdir(), "hooks-"));
+  for (const [relative, content] of Object.entries(item.files)) {
+    const path = join(home, relative.replaceAll("@KEY@", HOOKS.key));
+    mkdirSync(join(path, ".."), { recursive: true });
+    if (typeof content === "string") {
+      writeFileSync(path, content);
+    } else if (content.rules === "as-written") {
+      writeFileSync(path, JSON.stringify({ ...content, rules: GUARD_RULES }, null, 2) + "\n");
+    } else {
+      writeFileSync(path, JSON.stringify(content, null, 2) + "\n");
+    }
+  }
+  // A directory in place of the line file makes the read raise.
+  if (item.unreadable) {
+    const path = join(home, item.unreadable.replaceAll("@KEY@", HOOKS.key));
+    rmSync(path, { force: true });
+    mkdirSync(path, { recursive: true });
+  }
+  return home;
+}
+
+function payloadOf(home: string, item: (typeof HOOKS.cases)[number]): HookPayload {
+  return {
+    home,
+    workspace: item.payload.workspace,
+    sessionId: item.payload.session_id,
+    source: item.payload.source,
+    child: item.payload.child,
+    isFirstTurn: item.payload.is_first_turn,
+    lastSeqGiven: item.payload.last_seq_given,
+    command: item.payload.command,
+    turnExitReason: item.payload.turn_exit_reason,
+    provider: item.payload.provider,
+  };
+}
+
+test("every golden hook case agrees with the reference", async () => {
+  assert.ok(HOOKS.cases.length >= 15, `expected the full hook table in the fixtures, got ${HOOKS.cases.length}`);
+  for (const item of HOOKS.cases) {
+    const home = prepareHome(item);
+    try {
+      const payload = payloadOf(home, item);
+      let result: unknown;
+      if (item.hook === "pre_llm_call") result = preLlmCall(payload);
+      else if (item.hook === "pre_tool_call") result = preToolCall(payload, guardTableOf(home));
+      else result = onSessionEnd(payload, "2026-11-08T00:00:00Z");
+      // The Python hook returns None here; the reference returns the write it
+      // made, so for `on_session_end` the assertion is `expect_file` alone.
+      if (item.hook !== "on_session_end") assert.deepEqual(result, item.expected, item.name);
+      else assert.ok(item.expected === null, item.name);
+      const expected = item.expect_file;
+      if (expected === null) {
+        const inbox = join(home, "specstride-host", "inbox");
+        assert.ok(!existsSync(inbox) || readdirSync(inbox).length === 0, item.name);
+      } else {
+        const written = JSON.parse(
+          await fsReadFile(join(home, "specstride-host", expected.path)),
+        ) as Record<string, string>;
+        assert.equal(written.kind, expected.kind, item.name);
+        assert.equal(written.sessionId, expected.sessionId, item.name);
+        assert.equal(written.provider, expected.provider, item.name);
+      }
+      // No hook leaves a temporary file behind (atomic writes only).
+      const status = join(home, "specstride-host", "status");
+      if (existsSync(status)) {
+        for (const name of readdirSync(status)) assert.ok(!name.endsWith(".tmp"), item.name);
+      }
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
+  }
+});
+
+test("the session-start line is given once and unchanged turns give nothing (PT-150-038/039)", () => {
+  const home = mkdtempSync(join(tmpdir(), "hooks-"));
+  mkdirSync(join(home, "specstride-host", "status"), { recursive: true });
+  const { lineFile, seqFile } = hookStatusPaths(home, "/work/repo");
+  writeFileSync(lineFile, "specstride run r-7 parked — gate G-2\n");
+  writeFileSync(seqFile, "7\n");
+  const base: HookPayload = {
+    home,
+    workspace: "/work/repo",
+    sessionId: "s",
+    source: null,
+    child: false,
+    isFirstTurn: true,
+    lastSeqGiven: null,
+    command: null,
+    turnExitReason: null,
+    provider: null,
+  };
+  assert.deepEqual(preLlmCall(base), { context: "Specstride: specstride run r-7 parked — gate G-2" });
+  assert.equal(
+    preLlmCall({ ...base, isFirstTurn: false, lastSeqGiven: 7 }),
+    null,
+    "an unchanged counter adds nothing",
+  );
+  assert.deepEqual(preLlmCall({ ...base, isFirstTurn: false, lastSeqGiven: 6 }), {
+    context: "Specstride: specstride run r-7 parked — gate G-2",
+  });
+  rmSync(home, { recursive: true, force: true });
+});
+
+test("the guardrail never approves (PT-150-040)", () => {
+  const home = mkdtempSync(join(tmpdir(), "hooks-"));
+  mkdirSync(join(home, "specstride-host"), { recursive: true });
+  writeFileSync(
+    join(home, "specstride-host", "guard.json"),
+    JSON.stringify({ schema: "specstride.guard/1", blocking: false, fix: null, rules: GUARD_RULES }),
+  );
+  const payload: HookPayload = {
+    home,
+    workspace: "/work/repo",
+    sessionId: "s",
+    source: null,
+    child: false,
+    isFirstTurn: true,
+    lastSeqGiven: null,
+    command: SHIM_LAUNCH,
+    turnExitReason: null,
+    provider: null,
+  };
+  const verdict = preToolCall(payload, guardTableOf(home));
+  assert.equal(verdict, null, "an allowed launch gets no verdict, certainly not an approval");
+  rmSync(home, { recursive: true, force: true });
+});

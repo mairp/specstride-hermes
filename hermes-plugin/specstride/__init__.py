@@ -7,7 +7,7 @@
 # and lookups whose TypeScript reference is the host package's
 # `glue-reference.ts` (the pytest suite proves both agree). No business
 # logic, no `re`, no direct `subprocess` here. The hooks of the manifest are
-# bound in a later phase (T062).
+# bound below (T062).
 import json
 import os
 
@@ -194,3 +194,228 @@ def register(ctx):
             here = os.path.dirname(os.path.abspath(__file__))
             root = os.environ.get("SPECSTRIDE_HOST_ROOT", here)
             _call(register_skill, name, os.path.join(root, "skills", name))
+
+    # The hooks of the manifest (T062), bound in phase 8.
+    _register_hooks(ctx)
+
+
+# ---------------------------------------------------------------------------
+# The hooks of US6 (T062, contracts/150-host-hermes/plugin-manifest.md,
+# F150-FR-038 to F150-FR-042): thin glue over Node-written tables and the
+# watcher's precomputed status line. Every hook is wrapped in
+# `try/except → None` with a 5 s self-check (H5); the two pre_* hooks stay
+# silent in a Kanban worker, a cron session and a run's own child session;
+# nothing here spawns a process or imports a pattern library — the rules live
+# in `guard.json`, written by the host package's Node build.
+# ---------------------------------------------------------------------------
+
+import hashlib
+import os
+import time
+
+HOOK_BOUND_SECONDS = 5.0
+SILENT_SOURCES = ("kanban", "cron")
+
+# The last `.seq` counter given per `session_id` (integer comparison only).
+_SEQ_GIVEN = {}
+
+
+def _hook(fn):
+    """`try/except → None` plus the 5 s self-check: a hook that raises, or
+    that runs past its bound, is as if it were absent."""
+    def wrapped(ctx=None, *args, **kwargs):
+        started = time.monotonic()
+        try:
+            result = fn(ctx, *args, **kwargs)
+        except Exception:
+            return None
+        if time.monotonic() - started > HOOK_BOUND_SECONDS:
+            return None
+        return result
+
+    wrapped.__name__ = getattr(fn, "__name__", "hook")
+    return wrapped
+
+
+def _attr(obj, name, default=None):
+    """One attribute read with a default; the glue makes no decision beyond
+    this read and the comparisons below."""
+    value = getattr(obj, name, default)
+    return default if value is None else value
+
+
+def _hermes_home():
+    return os.environ.get("HERMES_HOME") or os.path.join(os.path.expanduser("~"), ".hermes")
+
+
+def _session_source(ctx):
+    value = _attr(ctx, "session_source")
+    if value is None:
+        value = os.environ.get("HERMES_SESSION_SOURCE")
+    return value
+
+
+def _is_child(ctx):
+    value = _attr(ctx, "child")
+    if value is not None:
+        return bool(value)
+    return os.environ.get("SPECSTRIDE_CHILD") == "1"
+
+
+def _is_silent(ctx):
+    """Silence in a Kanban worker, a cron session or a run's own child."""
+    source = _session_source(ctx)
+    return _is_child(ctx) or (source is not None and source in SILENT_SOURCES)
+
+
+def _workspace_of(ctx):
+    return _attr(ctx, "workspace") or _attr(ctx, "cwd") or os.getcwd()
+
+
+def _status_paths(workspace):
+    key = hashlib.sha256(workspace.encode("utf-8")).hexdigest()[:16]
+    directory = os.path.join(_hermes_home(), "specstride-host", "status")
+    return os.path.join(directory, key + ".line"), os.path.join(directory, key + ".seq")
+
+
+def _read_text(path):
+    with open(path, "r", encoding="utf-8") as handle:
+        return handle.read()
+
+
+def _write_atomic(path, text):
+    """One atomic file write: temporary file in the same directory, then a
+    single rename. The only write the hooks make."""
+    directory = os.path.dirname(path)
+    temporary = path + ".tmp"
+    with open(temporary, "w", encoding="utf-8") as handle:
+        handle.write(text)
+    os.replace(temporary, path)
+
+
+@_hook
+def pre_llm_call(ctx=None):
+    """The session-start and prompt lines (F150-FR-038, F150-FR-039): the
+    precomputed line once at the first turn when a run exists, and on later
+    turns only when the counter differs from the one last given in this
+    session. `{"context": "Specstride: <line>"}` or None."""
+    if _is_silent(ctx):
+        return None
+    session_id = str(_attr(ctx, "session_id", ""))
+    workspace = _workspace_of(ctx)
+    line_file, seq_file = _status_paths(workspace)
+    line = _read_text(line_file).rstrip("\n")
+    if line == "":
+        return None
+    try:
+        given = int(_SEQ_GIVEN.get(session_id))
+    except (TypeError, ValueError):
+        given = None
+    payload_given = _attr(ctx, "last_seq_given")
+    if payload_given is not None:
+        given = int(payload_given)
+    first_turn = bool(_attr(ctx, "is_first_turn", session_id not in _SEQ_GIVEN))
+    if not first_turn:
+        try:
+            counter = int(_read_text(seq_file).strip())
+        except Exception:
+            counter = None
+        if given is not None and counter == given:
+            return None
+    _SEQ_GIVEN[session_id] = _read_counter(seq_file)
+    return {"context": "Specstride: " + line}
+
+
+def _read_counter(seq_file):
+    try:
+        return int(_read_text(seq_file).strip())
+    except Exception:
+        return None
+
+
+@_hook
+def pre_tool_call(ctx=None):
+    """The launch guardrail (F150-FR-040): apply the rules of
+    `guard.json` — plain `in` tests on the command string — and block with
+    the rule's reason and fix; any launch while `blocking` is true is blocked
+    with the doctor's fix. A missing or invalid table is a no-op. The hook
+    never approves anything."""
+    if _is_silent(ctx):
+        return None
+    command = _attr(ctx, "command")
+    if command is None:
+        argv = getattr(ctx, "argv", None) or []
+        command = " ".join(str(part) for part in argv)
+    if "launch" not in command:
+        return None
+    table = _read_table(os.path.join(_hermes_home(), "specstride-host", "guard.json"), None)
+    if not isinstance(table, dict) or not isinstance(table.get("blocking"), bool):
+        return None
+    if not isinstance(table.get("rules"), list):
+        return None
+    if table["blocking"]:
+        fix = table.get("fix")
+        if not isinstance(fix, str):
+            fix = "run specstride-host-hermes doctor"
+        return {
+            "decision": "block",
+            "reason": "the last doctor result holds a launch-blocking finding",
+            "fix": fix,
+        }
+    for rule in table["rules"]:
+        if not isinstance(rule, dict):
+            continue
+        contains = rule.get("contains")
+        absent = rule.get("absent")
+        if not isinstance(contains, list) or not isinstance(absent, list):
+            continue
+        if any(literal not in command for literal in contains):
+            continue
+        if any(literal in command for literal in absent):
+            continue
+        return {"decision": "block", "reason": rule.get("reason"), "fix": rule.get("fix")}
+    return None
+
+
+@_hook
+def on_session_end(ctx=None):
+    """The host-limit request (F150-FR-041): a session that ends on a
+    provider usage limit inside a run's own child writes one atomic request
+    file the watcher forwards once the engine has the verb (U-150-08). The
+    hook spawns nothing and returns None."""
+    if not _is_child(ctx):
+        return None
+    reason = str(_attr(ctx, "turn_exit_reason", "") or "")
+    if "usage_limit" not in reason:
+        return None
+    session_id = str(_attr(ctx, "session_id", "") or "unknown")
+    request = {
+        "kind": "host-limit",
+        "sessionId": session_id,
+        "provider": str(_attr(ctx, "provider", "unknown")),
+        "at": str(_attr(ctx, "at", "") or ""),
+    }
+    directory = os.path.join(_hermes_home(), "specstride-host", "inbox")
+    os.makedirs(directory, exist_ok=True)
+    _write_atomic(
+        os.path.join(directory, session_id + ".json"),
+        json.dumps(request, indent=2) + "\n",
+    )
+    return None
+
+
+HOOKS = {
+    "pre_llm_call": pre_llm_call,
+    "pre_tool_call": pre_tool_call,
+    "on_session_end": on_session_end,
+}
+
+
+def _register_hooks(ctx):
+    """Bind the four manifest hook rows (the two `pre_llm_call` rows share
+    one handler); a host without `register_hook` gets nothing."""
+    register_hook = getattr(ctx, "register_hook", None)
+    if not callable(register_hook):
+        return
+    for name, handler in HOOKS.items():
+        _call(register_hook, name, handler)
