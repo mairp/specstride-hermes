@@ -121,6 +121,18 @@ const FORBIDDEN_REFERENCE_PATTERNS: readonly { readonly pattern: RegExp; readonl
     { pattern: /(^|[^\w.-])logs?\//, why: "a path into logs" },
   ]);
 
+/** The reference-closure findings one text carries, labelled for a report
+ * (`scripts/conformance.ts` scans the artifacts a target renders, not only
+ * the tree on disk). */
+export function referenceClosureFindingsOfText(text: string, label: string): Findings {
+  const findings: string[] = [];
+  for (const { pattern, why } of FORBIDDEN_REFERENCE_PATTERNS) {
+    const match = pattern.exec(text);
+    if (match) findings.push(`reference-closure: ${label} names ${why}: ${JSON.stringify(match[0])} (F150-FR-005)`);
+  }
+  return findings;
+}
+
 /** Gate: no path from a skill into product source, state or logs. */
 export function checkReferenceClosure(root: string): Findings {
   const findings: string[] = [];
@@ -128,13 +140,7 @@ export function checkReferenceClosure(root: string): Findings {
     for (const file of filesUnder(root, scope)) {
       if (![".md", ".py", ".yaml", ".yml", ".json"].includes(extname(file))) continue;
       const text = readFileSync(file, "utf8");
-      for (const { pattern, why } of FORBIDDEN_REFERENCE_PATTERNS) {
-        const match = pattern.exec(text);
-        if (match)
-          findings.push(
-            `reference-closure: ${relative(root, file)} names ${why}: ${JSON.stringify(match[0])} (F150-FR-005)`,
-          );
-      }
+      findings.push(...referenceClosureFindingsOfText(text, relative(root, file)));
     }
   }
   return findings;
