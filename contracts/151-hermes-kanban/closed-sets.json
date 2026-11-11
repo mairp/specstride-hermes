@@ -1,0 +1,968 @@
+{
+  "$schema": "specstride.closed-sets-151/1",
+  "feature": "151-hermes-kanban",
+  "date": "2026-11-11",
+  "note": "Every closed set of specs/151-hermes-kanban/spec.md in one machine-readable file. Source: specs/151-hermes-kanban/contracts/closed-sets.json; the tracked mirror contracts/151-hermes-kanban/closed-sets.json is what the build reads (scripts/gen-kanban-values.ts). The code tables are held equal to it by tests/contract/kanban-closed-sets.test.ts. Shape after specstride-dsh contracts/kanban-closed-sets.json at ab8093e.",
+  "consumedFromEngine": [
+    {
+      "set": "lanes",
+      "owner": "129",
+      "package": "@specstride/contracts 0.1.0 LANES",
+      "members": [
+        "queued",
+        "proposing",
+        "verifying",
+        "reviewing",
+        "approved",
+        "blocked",
+        "paused",
+        "failed"
+      ],
+      "unknownValue": "? with the raw value; column scheduled; a trailing column in the tab (F151-FR-005, F151-FR-019)"
+    },
+    {
+      "set": "run-states",
+      "owner": "129",
+      "package": "@specstride/contracts 0.1.0 RUN_STATES",
+      "members": [
+        "created",
+        "starting",
+        "running",
+        "paused-quota",
+        "relaunching",
+        "stopping",
+        "blocked-on-human",
+        "finished",
+        "stopped",
+        "failed"
+      ],
+      "unknownValue": "? with the raw value; column scheduled (F151-FR-003; OD-151-10 for reader run states)"
+    },
+    {
+      "set": "attention-kinds",
+      "owner": "129",
+      "package": "@specstride/contracts 0.1.0 ATTENTION_KINDS",
+      "members": [
+        "blocked-on-human",
+        "source-changed",
+        "dead-run",
+        "launch-abandoned",
+        "quota-pause",
+        "budget-alert",
+        "stale-run",
+        "orphan-processes",
+        "unknown-state"
+      ],
+      "unknownValue": "? with the raw value; the item keeps its place (F151-FR-019)"
+    },
+    {
+      "set": "budget-levels",
+      "owner": "129",
+      "members": [
+        "unknown",
+        "ok",
+        "info",
+        "warn",
+        "loud",
+        "over"
+      ],
+      "unknownValue": "? with the raw value (F151-FR-019)"
+    },
+    {
+      "set": "derived-run-conditions",
+      "owner": "100",
+      "members": [
+        "dead",
+        "stale",
+        "launch-abandoned"
+      ],
+      "unknownValue": "not applicable: the view carries them as fields"
+    }
+  ],
+  "consumedFromHermes": [
+    {
+      "set": "target-columns",
+      "pin": "hermes-agent 0.22.2 @ d923a5eb48",
+      "members": [
+        "scheduled",
+        "done",
+        "archived",
+        "blocked",
+        "ready"
+      ],
+      "rule": "blocked holds attention cards only; ready only under map v2; any other target fails the build (F151-FR-003)"
+    },
+    {
+      "set": "forbidden-columns",
+      "pin": "hermes-agent 0.22.2 @ d923a5eb48",
+      "members": [
+        "triage",
+        "todo",
+        "running",
+        "review"
+      ],
+      "rule": "the build fails if the map names one (F151-FR-003)"
+    },
+    {
+      "set": "theme-tokens",
+      "pin": "hermes-agent 0.22.2 @ d923a5eb48",
+      "source": "web/src/index.css:154-181",
+      "verifiedOn": "2026-11-11",
+      "members": [
+        "--color-foreground",
+        "--color-card",
+        "--color-card-foreground",
+        "--color-primary",
+        "--color-primary-foreground",
+        "--color-secondary",
+        "--color-secondary-foreground",
+        "--color-muted",
+        "--color-muted-foreground",
+        "--color-accent",
+        "--color-accent-foreground",
+        "--color-destructive",
+        "--color-destructive-foreground",
+        "--color-success",
+        "--color-warning",
+        "--color-border",
+        "--color-input",
+        "--color-ring",
+        "--color-popover",
+        "--color-popover-foreground"
+      ],
+      "rule": "a colour-bearing property takes only var() of these, a plugin-local property held to the same rule, or color-mix(in srgb, ...) over those and percentages; the scan fails the build otherwise (F151-FR-024)"
+    },
+    {
+      "set": "sdk-members",
+      "pin": "hermes-agent 0.22.2 @ d923a5eb48",
+      "source": "web/src/plugins/registry.ts:118-191",
+      "verifiedOn": "2026-11-11",
+      "members": [
+        "sdkVersion",
+        "React",
+        "hooks",
+        "api",
+        "fetchJSON",
+        "authedFetch",
+        "buildWsUrl",
+        "buildWsAuthParam",
+        "components",
+        "utils",
+        "useI18n"
+      ],
+      "hooks": [
+        "useState",
+        "useEffect",
+        "useCallback",
+        "useMemo",
+        "useRef",
+        "useContext",
+        "createContext",
+        "useToast",
+        "useConfirmDelete"
+      ],
+      "components": [
+        "Card",
+        "CardHeader",
+        "CardTitle",
+        "CardContent",
+        "Badge",
+        "Button",
+        "Checkbox",
+        "ConfirmDialog",
+        "Dialog",
+        "DialogClose",
+        "DialogContent",
+        "DialogDescription",
+        "DialogFooter",
+        "DialogHeader",
+        "DialogTitle",
+        "Input",
+        "Label",
+        "Select",
+        "SelectOption",
+        "Separator",
+        "Tabs",
+        "TabsList",
+        "TabsTrigger",
+        "Toast",
+        "PluginSlot"
+      ],
+      "utils": [
+        "cn",
+        "timeAgo",
+        "isoTimeAgo"
+      ],
+      "rule": "the strict fake gives exactly these and throws on any other (F151-FR-050)"
+    }
+  ],
+  "proposedByFeature": [
+    {
+      "id": "kanban-tab-identity",
+      "members": [
+        {
+          "path": "/specstride",
+          "position": "after:kanban",
+          "override": null
+        }
+      ],
+      "rule": "no tab.override; any other value fails the build (F151-FR-018)"
+    },
+    {
+      "id": "kanban-cli-verbs",
+      "members": [
+        {
+          "argv": [
+            "status",
+            "--json"
+          ]
+        },
+        {
+          "argv": [
+            "wait",
+            "--until-change",
+            "--cursor",
+            "<token>",
+            "--timeout",
+            "<seconds>"
+          ]
+        },
+        {
+          "argv": [
+            "stop"
+          ],
+          "when": "specstride.kanban.actions: true"
+        },
+        {
+          "argv": [
+            "stop",
+            "--now"
+          ],
+          "when": "specstride.kanban.actions: true"
+        },
+        {
+          "argv": [
+            "resume"
+          ],
+          "when": "specstride.kanban.actions: true"
+        }
+      ],
+      "rule": "spawned only through 150's shim; any other argv is refused with no CLI call; the shim's own --protocol probe is 150's check, tagged probe by the stub, and not a verb of this feature (F151-FR-021, F151-FR-051)"
+    },
+    {
+      "id": "kanban-view-sources",
+      "members": [
+        "engine",
+        "workspace-reader"
+      ],
+      "rule": "an absent source member reads as engine; any other value refuses the view (F151-FR-035)"
+    },
+    {
+      "id": "kanban-api-answers",
+      "members": [
+        "view",
+        "unchanged",
+        "no-run",
+        "absent",
+        "refused-schema",
+        "unavailable",
+        "run-changed"
+      ],
+      "rule": "every 200 body carries one in answer; anything else reads as unavailable (F151-FR-023)",
+      "session": [
+        "token",
+        "expiresAt",
+        "actions",
+        "laneThreshold"
+      ]
+    },
+    {
+      "id": "kanban-reader-inputs",
+      "members": [
+        {
+          "n": 1,
+          "path": "specs/<f>/tasks.md",
+          "gives": "phases, scope, ticks"
+        },
+        {
+          "n": 2,
+          "path": ".specstride/workspace.json",
+          "gives": "the workspace id"
+        },
+        {
+          "n": 3,
+          "path": ".specstride/events.jsonl",
+          "gives": "the bash engine's event stream"
+        },
+        {
+          "n": 4,
+          "path": ".specstride/features/<f>/gates/ (names), .specstride/features/<f>/evidence/ (names and sizes)",
+          "gives": "gate approvals; evidence name and size, never its text"
+        },
+        {
+          "n": 5,
+          "path": ".specstride/launches/launch-*/{launch,supervision,runtime.status}.json",
+          "gives": "launches"
+        },
+        {
+          "n": 6,
+          "path": ".specstride/active, .specstride/features/<f>/runs/run-launch-*/lease.json",
+          "gives": "the launch owner's pid and start"
+        },
+        {
+          "n": 7,
+          "path": ".specstride/state/pipeline/<f>/runs/<launch>/state.json",
+          "gives": "the pipeline's end record"
+        },
+        {
+          "n": 8,
+          "path": "~/.specstride/workspaces/<id16>/ (also the full id, and $XDG_STATE_HOME/specstride/workspaces/): runs/*/events.jsonl, procs.json, features/<f>/{approvals,bound,micro,feedback,set-aside}/, features/<f>/{ledger,loop}.json",
+          "gives": "the TS engine's runs, process registry, approvals, counters, units, critic feedback verdict lines"
+        },
+        {
+          "n": 9,
+          "path": "/proc/<pid>/{stat,cmdline} for recorded pids, /proc/stat",
+          "gives": "liveness; harness, profile, model, role"
+        },
+        {
+          "n": 10,
+          "path": "~/.dsh/sessions/<cwd-slug>/ and worker roots named after the feature's runs",
+          "gives": "usage",
+          "when": "only when the run's proposer harness is dsh"
+        }
+      ],
+      "bounds": {
+        "eventTailBytes": 8388608,
+        "jsonRecordBytes": 262144,
+        "tasksMdBytes": 2097152
+      },
+      "rule": "read-only; a path outside the list is never opened; no process is spawned; nothing is written (F151-FR-034)"
+    },
+    {
+      "id": "kanban-reader-lane-rules",
+      "ordered": true,
+      "members": [
+        {
+          "rule": "W0",
+          "when": "nothing has started the feature (no run, no approval, no ticked task)",
+          "lane": "queued",
+          "card": "one card <feature>#queued"
+        },
+        {
+          "rule": "W1",
+          "when": "the run is not ended and its current phase is this phase",
+          "lane": "the run's live lane (kanban-reader-live-lanes), proposing when it has none"
+        },
+        {
+          "rule": "W2",
+          "when": "the run ended all_approved, or an approval record or gate of the phase exists, or the run recorded phase.ended approved, or every task of the phase is ticked",
+          "lane": "approved"
+        },
+        {
+          "rule": "W3",
+          "when": "the run is ended and its current phase is this phase",
+          "lane": "the end lane (kanban-reader-end-rules)"
+        },
+        {
+          "rule": "W4",
+          "when": "otherwise",
+          "lane": "queued"
+        }
+      ],
+      "rule": "first match wins, in this order; ruleId is W-<lane>; no lane is assigned outside src/kanban/reader/lanes.ts (F151-FR-038, F151-FR-049)"
+    },
+    {
+      "id": "kanban-reader-live-lanes",
+      "members": [
+        "proposing",
+        "verifying",
+        "reviewing",
+        "paused",
+        "blocked"
+      ],
+      "unknown": "proposing"
+    },
+    {
+      "id": "kanban-reader-end-rules",
+      "ordered": true,
+      "members": [
+        {
+          "when": "phase.ended outcome blocked",
+          "lane": "blocked"
+        },
+        {
+          "when": "phase.ended outcome stopped",
+          "lane": "paused"
+        },
+        {
+          "when": "phase.ended outcome other than approved",
+          "lane": "failed"
+        },
+        {
+          "when": "pipeline state.json stopped (not running, not dry-run, not older than the run's last event)",
+          "lane": "paused"
+        },
+        {
+          "when": "pipeline state.json completed",
+          "lane": null
+        },
+        {
+          "when": "pipeline state.json any other state that is not running",
+          "lane": "failed"
+        },
+        {
+          "when": "launch signalled, stopped, or stop requested",
+          "lane": "paused"
+        },
+        {
+          "when": "launch exited 0 or completed",
+          "lane": null
+        },
+        {
+          "when": "any other launch state that is not running",
+          "lane": "failed"
+        },
+        {
+          "when": "no launch, procs.json present, no alive process, 120 s without an event",
+          "lane": "failed"
+        },
+        {
+          "when": "bash engine outcome matching yield|pause|stop|quota",
+          "lane": "paused"
+        },
+        {
+          "when": "bash engine outcome matching human|halt|block",
+          "lane": "blocked"
+        }
+      ],
+      "unknown": "failed",
+      "constants": {
+        "startToleranceMs": 1000,
+        "silentRunMs": 120000,
+        "staleAfterMs": 7200000
+      }
+    },
+    {
+      "id": "kanban-launch-states",
+      "members": [
+        "running",
+        "exited",
+        "completed",
+        "stopped",
+        "signalled",
+        "failed",
+        "lost"
+      ],
+      "unknown": "? with the raw value"
+    },
+    {
+      "id": "kanban-signature-members",
+      "members": [
+        "cards: id, lane, flags.stale",
+        "attention: key, oneLine",
+        "launches: launchId, state",
+        "run: id, launch, state, phase, startedAt, lastAt",
+        "agents: role, pid, what",
+        "usage: calls, retries",
+        "phase: tasksDone, attempts (outcome, passes), counters, units"
+      ],
+      "rule": "sha256 over these in this order (F151-FR-040)"
+    },
+    {
+      "id": "kanban-engine-memo",
+      "constants": {
+        "retryMs": 60000,
+        "maxWorkspaces": 64
+      },
+      "rule": "set by an engine answer that is unavailable, or valid with no card while the reader gave cards; cleared by an engine view that carries a card (F151-FR-039)"
+    },
+    {
+      "id": "kanban-inspector-sections",
+      "ordered": true,
+      "members": [
+        "scope",
+        "live",
+        "attempts",
+        "launches",
+        "cost"
+      ],
+      "labels": [
+        "Scope",
+        "Live",
+        "Attempts",
+        "Launches",
+        "Cost and limits"
+      ]
+    },
+    {
+      "id": "kanban-detail-bounds",
+      "constants": {
+        "textBytes": 240,
+        "taskTextBytes": 160,
+        "tasks": 60,
+        "files": 12,
+        "attempts": 12,
+        "launches": 12,
+        "agents": 8,
+        "models": 6
+      },
+      "rule": "cut with an omitted count (F151-FR-044)"
+    },
+    {
+      "id": "kanban-never-in-a-view",
+      "members": [
+        "absolute path",
+        "prompt",
+        "reply",
+        "tool argument",
+        "command line",
+        "signature",
+        "key",
+        "log line"
+      ],
+      "rule": "the redaction test fails if one is found (F151-FR-044)"
+    },
+    {
+      "id": "kanban-not-said-texts",
+      "members": {
+        "liveness": "not observable",
+        "cost": "not reported",
+        "usage": "not reported",
+        "quota": "quota: not reported"
+      },
+      "rule": "F151-FR-045"
+    },
+    {
+      "id": "kanban-strip",
+      "constants": {
+        "featureRows": 4
+      },
+      "rule": "F151-FR-048"
+    },
+    {
+      "id": "kanban-window",
+      "constants": {
+        "threshold": 100,
+        "overscan": 20,
+        "thresholdMin": 1,
+        "thresholdMax": 10000
+      },
+      "rule": "F151-FR-048"
+    },
+    {
+      "id": "kanban-doctor-facts",
+      "check": "host.kanban-plugin",
+      "members": [
+        "kanban-enabled",
+        "projector-alive",
+        "tab-enabled",
+        "map-version",
+        "shim-on-unit-path",
+        "engine-answers-protocol",
+        "engine-path",
+        "engine-matches-pin",
+        "host-cli-runs-installed",
+        "engine-view-has-cards",
+        "view-source"
+      ],
+      "unknown": "unknown, never ok (F151-FR-030, F151-FR-053)"
+    },
+    {
+      "id": "kanban-scan-rules",
+      "members": [
+        "no-lane-assignment",
+        "css-colour",
+        "css-selector",
+        "markup-sink",
+        "nondeterminism"
+      ],
+      "rule": "contracts/presentation.md (F151-FR-049)"
+    },
+    {
+      "id": "kanban-lane-presentation",
+      "members": [
+        {
+          "lane": "queued",
+          "glyph": "·",
+          "label": "Queued",
+          "grayscale": 232,
+          "token": "--color-muted-foreground"
+        },
+        {
+          "lane": "proposing",
+          "glyph": "▶",
+          "label": "Proposing",
+          "grayscale": 160,
+          "token": "--color-primary"
+        },
+        {
+          "lane": "verifying",
+          "glyph": "◇",
+          "label": "Verifying",
+          "grayscale": 184,
+          "token": "--color-primary",
+          "mix": {
+            "with": "--color-success",
+            "percent": 60
+          }
+        },
+        {
+          "lane": "reviewing",
+          "glyph": "◎",
+          "label": "Reviewing",
+          "grayscale": 136,
+          "token": "--color-primary",
+          "mix": {
+            "with": "--color-warning",
+            "percent": 60
+          }
+        },
+        {
+          "lane": "approved",
+          "glyph": "✓",
+          "label": "Approved",
+          "grayscale": 88,
+          "token": "--color-success"
+        },
+        {
+          "lane": "blocked",
+          "glyph": "⏸",
+          "label": "Blocked",
+          "grayscale": 208,
+          "token": "--color-warning"
+        },
+        {
+          "lane": "paused",
+          "glyph": "‖",
+          "label": "Paused",
+          "grayscale": 64,
+          "token": "--color-warning",
+          "mix": {
+            "with": "--color-muted-foreground",
+            "percent": 50
+          }
+        },
+        {
+          "lane": "failed",
+          "glyph": "✗",
+          "label": "Failed",
+          "grayscale": 40,
+          "token": "--color-destructive"
+        }
+      ],
+      "unknown": {
+        "glyph": "?",
+        "label": "the raw value, as text",
+        "grayscale": 112,
+        "token": "--color-border"
+      },
+      "rule": "total over lanes; glyph, label and grayscale pairwise distinct; grayscale at least 24 apart, unknown included; maps members to presentation, never anything to a lane (F151-FR-025)"
+    },
+    {
+      "id": "kanban-attention-presentation",
+      "members": [
+        {
+          "kind": "blocked-on-human",
+          "glyph": "!",
+          "label": "Needs you",
+          "grayscale": 40,
+          "token": "--color-warning"
+        },
+        {
+          "kind": "source-changed",
+          "glyph": "△",
+          "label": "Source changed",
+          "grayscale": 88,
+          "token": "--color-primary"
+        },
+        {
+          "kind": "dead-run",
+          "glyph": "†",
+          "label": "Run is dead",
+          "grayscale": 16,
+          "token": "--color-destructive"
+        },
+        {
+          "kind": "launch-abandoned",
+          "glyph": "⊘",
+          "label": "Launch abandoned",
+          "grayscale": 64,
+          "token": "--color-destructive"
+        },
+        {
+          "kind": "quota-pause",
+          "glyph": "‖",
+          "label": "Paused for quota",
+          "grayscale": 136,
+          "token": "--color-warning"
+        },
+        {
+          "kind": "budget-alert",
+          "glyph": "$",
+          "label": "Budget alert",
+          "grayscale": 112,
+          "token": "--color-warning"
+        },
+        {
+          "kind": "stale-run",
+          "glyph": "⌛",
+          "label": "View is stale",
+          "grayscale": 160,
+          "token": "--color-muted-foreground"
+        },
+        {
+          "kind": "orphan-processes",
+          "glyph": "◌",
+          "label": "Orphan processes",
+          "grayscale": 208,
+          "token": "--color-muted-foreground"
+        },
+        {
+          "kind": "unknown-state",
+          "glyph": "⁇",
+          "label": "Unknown state",
+          "grayscale": 232,
+          "token": "--color-border"
+        }
+      ],
+      "unknown": {
+        "glyph": "?",
+        "label": "the raw value, as text",
+        "grayscale": 184,
+        "token": "--color-border"
+      },
+      "rule": "total over attention-kinds; pairwise distinct glyph, label, grayscale; grayscale at least 24 apart, unknown included"
+    },
+    {
+      "id": "kanban-budget-presentation",
+      "members": [
+        {
+          "level": "unknown",
+          "glyph": "–",
+          "label": "Unknown",
+          "grayscale": 232,
+          "token": "--color-border"
+        },
+        {
+          "level": "ok",
+          "glyph": "✓",
+          "label": "OK",
+          "grayscale": 200,
+          "token": "--color-success"
+        },
+        {
+          "level": "info",
+          "glyph": "i",
+          "label": "Info",
+          "grayscale": 136,
+          "token": "--color-primary"
+        },
+        {
+          "level": "warn",
+          "glyph": "!",
+          "label": "Warn",
+          "grayscale": 104,
+          "token": "--color-warning"
+        },
+        {
+          "level": "loud",
+          "glyph": "‼",
+          "label": "Loud",
+          "grayscale": 72,
+          "token": "--color-warning"
+        },
+        {
+          "level": "over",
+          "glyph": "✗",
+          "label": "Over",
+          "grayscale": 40,
+          "token": "--color-destructive"
+        }
+      ],
+      "unknown": {
+        "glyph": "?",
+        "label": "the raw value, as text",
+        "grayscale": 168,
+        "token": "--color-border"
+      },
+      "rule": "total over budget-levels; grayscale at least 24 apart, unknown included"
+    },
+    {
+      "id": "kanban-task-presentation",
+      "members": [
+        {
+          "state": "done",
+          "glyph": "✓",
+          "label": "done",
+          "grayscale": 232,
+          "token": "--color-success"
+        },
+        {
+          "state": "met",
+          "glyph": "◆",
+          "label": "critic: met",
+          "grayscale": 200,
+          "token": "--color-success"
+        },
+        {
+          "state": "open",
+          "glyph": "○",
+          "label": "open",
+          "grayscale": 160,
+          "token": "--color-muted-foreground"
+        },
+        {
+          "state": "unmet",
+          "glyph": "✗",
+          "label": "critic: unmet",
+          "grayscale": 112,
+          "token": "--color-destructive"
+        }
+      ],
+      "unknown": {
+        "glyph": "?",
+        "label": "the raw value, as text",
+        "grayscale": 88,
+        "token": "--color-border"
+      }
+    },
+    {
+      "id": "kanban-alive-presentation",
+      "members": [
+        {
+          "state": "alive",
+          "glyph": "●",
+          "label": "alive",
+          "grayscale": 232,
+          "token": "--color-success"
+        },
+        {
+          "state": "unknown",
+          "glyph": "◌",
+          "label": "not observable",
+          "grayscale": 176,
+          "token": "--color-muted-foreground"
+        },
+        {
+          "state": "gone",
+          "glyph": "○",
+          "label": "gone",
+          "grayscale": 120,
+          "token": "--color-muted-foreground"
+        }
+      ],
+      "unknown": {
+        "glyph": "?",
+        "label": "the raw value, as text",
+        "grayscale": 64,
+        "token": "--color-border"
+      }
+    },
+    {
+      "id": "kanban-outcome-presentation",
+      "members": [
+        {
+          "outcome": "approved",
+          "glyph": "✓",
+          "label": "approved",
+          "grayscale": 232,
+          "token": "--color-success"
+        },
+        {
+          "outcome": "open",
+          "glyph": "▶",
+          "label": "in progress",
+          "grayscale": 184,
+          "token": "--color-primary"
+        },
+        {
+          "outcome": "rejected",
+          "glyph": "✗",
+          "label": "rejected",
+          "grayscale": 136,
+          "token": "--color-destructive"
+        },
+        {
+          "outcome": "ended",
+          "glyph": "■",
+          "label": "ended",
+          "grayscale": 112,
+          "token": "--color-muted-foreground"
+        },
+        {
+          "outcome": "interrupted",
+          "glyph": "‖",
+          "label": "interrupted",
+          "grayscale": 88,
+          "token": "--color-warning"
+        }
+      ],
+      "unknown": {
+        "glyph": "?",
+        "label": "the raw value, as text",
+        "grayscale": 64,
+        "token": "--color-border"
+      }
+    },
+    {
+      "id": "kanban-launch-presentation",
+      "members": [
+        {
+          "state": "running",
+          "glyph": "▶",
+          "label": "running",
+          "grayscale": 208,
+          "token": "--color-primary"
+        },
+        {
+          "state": "completed",
+          "glyph": "✓",
+          "label": "completed",
+          "grayscale": 184,
+          "token": "--color-success"
+        },
+        {
+          "state": "exited",
+          "glyph": "■",
+          "label": "exited",
+          "grayscale": 160,
+          "token": "--color-muted-foreground"
+        },
+        {
+          "state": "stopped",
+          "glyph": "⏸",
+          "label": "stopped",
+          "grayscale": 136,
+          "token": "--color-warning"
+        },
+        {
+          "state": "signalled",
+          "glyph": "‖",
+          "label": "stopped by a signal",
+          "grayscale": 112,
+          "token": "--color-warning"
+        },
+        {
+          "state": "failed",
+          "glyph": "✗",
+          "label": "failed",
+          "grayscale": 88,
+          "token": "--color-destructive"
+        },
+        {
+          "state": "lost",
+          "glyph": "⚠",
+          "label": "lost (no exit record)",
+          "grayscale": 64,
+          "token": "--color-destructive"
+        }
+      ],
+      "unknown": {
+        "glyph": "?",
+        "label": "the raw value, as text",
+        "grayscale": 232,
+        "token": "--color-border"
+      }
+    }
+  ]
+}

@@ -29,3 +29,33 @@ Mirrored by `src/host-facts.ts`; `host.hermes-version` reads `HF-VERSION` only.
 | HF-SKILLS-LIST | `hermes skills list` lists the installed skills of the active home | — | — | unverified | T066 (the U-150-01 check) |
 | HF-PROFILE-CREATE | `hermes profile create <name>` makes `<home>/profiles/<name>/` | `hermes_cli/profiles.py` | — | unverified | read + quickstart step 0 |
 | HF-VERSION-FMT | `hermes --version` prints a line containing `0.22.2`, parsed by `/(\d+\.\d+\.\d+)/` | — | — | unverified | T066 |
+
+## Rows added by 151, 2026-11-11
+
+Appended for feature 151 (`research/E-dsh-kanban-lessons.md` §2). Same pin as every row above: hermes-agent 0.22.2 @ d923a5eb48. The 24 rows above are unchanged; mirroring these six into `src/host-facts.ts` is a task of 151.
+
+| Id | Fact | Source | Verified-on | Status | Settling check |
+|---|---|---|---|---|---|
+| HF-DASH-TOKENS | (added by 151, 2026-11-11) The dashboard exposes the theme tokens `--color-foreground`, `-card`, `-card-foreground`, `-primary`, `-primary-foreground`, `-secondary`, `-secondary-foreground`, `-muted`, `-muted-foreground`, `-accent`, `-accent-foreground`, `-destructive`, `-destructive-foreground`, `-success`, `-warning`, `-border`, `-input`, `-ring`, `-popover`, `-popover-foreground` | `web/src/index.css:154-181` | 2026-11-11 | verified (read) | — |
+| HF-DASH-THEME-SWITCH | (added by 151, 2026-11-11) A theme switch sets the variables on the document root, so a plugin subtree follows without a reload | `web/src/themes/context.tsx:349-386`; `website/docs/user-guide/features/extending-the-dashboard.md:788-795` | 2026-11-11 | verified (read) | U-151-13: person-run switch with the tab open |
+| HF-DASH-SDK | (added by 151, 2026-11-11) `window.__HERMES_PLUGIN_SDK__` gives `sdkVersion`, `React`, `hooks`, `api`, `fetchJSON`, `authedFetch`, `buildWsUrl`, `buildWsAuthParam`, `components`, `utils`, `useI18n` | `web/src/plugins/registry.ts:118-191` | 2026-11-11 | verified (read) | 151's live tab lane loads the bundle |
+| HF-DASH-API-404 | (added by 151, 2026-11-11) An `/api/…` path no route matches, an unmounted `/api/plugins/<name>/…` route, and the routes of a `plugin_api.py` that failed to import answer 404 JSON, never the SPA page; authentication answers 401 first | `hermes_cli/web_server_dashboard.py:227-233, 943-960, 1045-1047`; `hermes_cli/web_server.py:674-683` | 2026-11-11 | verified (read) | U-151-12: 151's live tab lane requests a route of a disabled plugin |
+| HF-DASH-CSS | (added by 151, 2026-11-11) A dashboard manifest's `css` field names a stylesheet injected as a `<link>` on plugin load | `website/docs/user-guide/features/extending-the-dashboard.md:776-788`; `hermes_cli/web_server_dashboard.py:550` | 2026-11-11 | readme-only | 151's live tab lane |
+| HF-SESSION-USAGE | (added by 151, 2026-11-11) Hermes keeps per-session usage (`input_tokens`, `output_tokens`, `estimated_cost_usd`) in its state database; whether a session can be joined to a run and read without opening that database | `hermes_state_schema.py:85-90` | — | unverified | U-151-10 |
+
+### Kanban rows added by 151, 2026-11-11
+
+The facts about the Hermes Kanban that feature 151 relies on (its research R1 to R4), which no row carried until now. Sources are the code reads of 2026-11-08 recorded in `research/S00-specify-grounding.md` slice 2 and `research/P00-plan-grounding.md` slices 1–2; the line anchors marked † were re-opened on 2026-11-11. Mirrored into `src/host-facts.ts` by a task of 151.
+
+| Id | Fact | Source | Verified-on | Status | Settling check |
+|---|---|---|---|---|---|
+| HF-KANBAN-CLI | (added by 151, 2026-11-11) `hermes kanban create` takes `--tenant`, `--assignee` and `--idempotency-key`; a repeated create with the same key is a no-op | `hermes_cli/kanban_parser.py:84, 167, 181` †; `research/C-hermes-surface.md:158` | 2026-11-08 | verified (read) | 151 live dispatcher lane |
+| HF-KANBAN-NONSPAWN | (added by 151, 2026-11-11) A card whose assignee is not a Hermes profile is bucketed `skipped_nonspawnable` in every lane, and `kanban.default_assignee` does not apply to it | `hermes_cli/kanban_db_dispatch.py:2042-2061` †, `:2400-2410` | 2026-11-08 | verified (read) | U-151-02: 151 live dispatcher lane (also that `create --assignee` accepts a non-profile name) |
+| HF-KANBAN-BLOCK | (added by 151, 2026-11-11) Every block is sticky (`recompute_ready` does not promote it); a second block of the same kind routes the card to `triage` (`BLOCK_RECURRENCE_LIMIT = 2`) | `hermes_cli/kanban_db.py:114` †, `:2005-2020, 3239-3264` | 2026-11-08 | verified (read) | — |
+| HF-KANBAN-PROMOTE | (added by 151, 2026-11-11) `recompute_ready` promotes a `todo` card whose parents are done, including a card with no parents | `hermes_cli/kanban_db.py:2063-2110` † | 2026-11-08 | verified (read) | — |
+| HF-KANBAN-RUNNING | (added by 151, 2026-11-11) A `running` card without a claim is reconciled to `ready` | `hermes_cli/kanban_db_dispatch.py:846-862` | 2026-11-08 | verified (read) | — |
+| HF-KANBAN-TRIAGE | (added by 151, 2026-11-11) `kanban.auto_decompose` is on by default: a card in `triage` is handed to a model on a dispatch tick | `hermes_cli/config_defaults.py:1941` † | 2026-11-08 | verified (read) | U-151-07: tick test with `auto_decompose` on |
+| HF-KANBAN-SCHEDULED | (added by 151, 2026-11-11) `scheduled` is entered from `todo`, `ready`, `running` and `blocked` and is not dispatchable | `hermes_cli/kanban_db.py:3889-3915` † | 2026-11-08 | verified (read) | — |
+| HF-KANBAN-HOOK | (added by 151, 2026-11-11) `on_kanban_task_updated` carries field names only; lifecycle moves fire other hooks | `research/P00-plan-grounding.md` P2-6 | 2026-11-08 | verified (read) | — |
+| HF-KANBAN-NOTIFY | (added by 151, 2026-11-11) `kanban notify-subscribe` delivers through the card owner's profile adapter; whether it delivers for a non-profile assignee | `research/C-hermes-surface.md:163` | — | unverified | U-151-05: model-free probe with a stub Telegram adapter |
+

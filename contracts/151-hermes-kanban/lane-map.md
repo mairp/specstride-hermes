@@ -2,7 +2,9 @@
 
 F151-FR-003, F151-FR-005, F151-FR-009 to F151-FR-011; research R2, R3. Source of truth:
 `src/kanban/map.ts`; mirrored here. Total over `LANES` and `RUN_STATES` of `@specstride/contracts`
-0.1.0 — a missing member fails the build.
+0.1.0 — a missing member fails the build. Amended 2026-11-11 (lesson L1): the map takes a lane
+from a card whatever the view's source; it never assigns one. Which lane a reader card has is
+decided only by the rule table of [workspace-reader.md](workspace-reader.md) §2.
 
 ## Stage cards (engine lanes)
 
@@ -21,6 +23,8 @@ F151-FR-003, F151-FR-005, F151-FR-009 to F151-FR-011; research R2, R3. Source of
 ## Root cards (run states)
 
 `created, starting, running, paused-quota, relaunching, stopping, blocked-on-human, stopped, failed` → `scheduled`; `finished` → `done`; unknown → `scheduled`, label `?`.
+
+A reader view's run state is recorded text (`running`, `between passes`, or the recorded outcome such as `crash`, `completed`, `signalled`). It goes through the same row: a member of the ten states maps as above, anything else is unknown → `scheduled`, label `?<raw>`. The root card of a reader-sourced run therefore never reaches `done` by this map (OD-151-10, open with this default).
 
 ## Forbidden targets
 
