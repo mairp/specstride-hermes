@@ -6,7 +6,7 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { chmodSync, readdirSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, symlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { runShim, shimFixture, writeStubCli, type ShimFixture } from "./helper.ts";
 import { SHIM_FILE_NAME, assertShimFileName } from "../../src/shim.ts";
@@ -18,6 +18,16 @@ function withFixture(fn: (fx: ShimFixture) => void): void {
   } finally {
     fx.cleanup();
   }
+}
+
+/**
+ * A PATH directory holding only the running node — no `specstride` of the
+ * host can leak into the search, so the shim's 127 is observed on any machine.
+ */
+function nodeOnlyPath(fx: ShimFixture): string {
+  const dir = mkdtempSync(join(fx.home, "node-only-path-"));
+  symlinkSync(process.execPath, join(dir, "node"));
+  return dir;
 }
 
 test("SPECSTRIDE_BIN wins over the search path", () => {
@@ -36,8 +46,10 @@ test("SPECSTRIDE_BIN wins over the search path", () => {
 
 test("a missing CLI exits 127 with exactly one line", () => {
   withFixture((fx) => {
+    // An isolated PATH (only node): no host CLI (e.g. /usr/local/bin/specstride)
+    // may leak into the search, or the 127 below is never observed.
     const run = runShim(fx, ["status"], {
-      PATH: join(process.execPath, ".."),
+      PATH: nodeOnlyPath(fx),
       SPECSTRIDE_BIN: undefined,
     });
     assert.equal(run.status, 127);
@@ -77,8 +89,8 @@ test("a shim named specstride is refused by the build", () => {
 
 test("the shim fetches, installs and writes nothing but the watch list it owns", () => {
   withFixture((fx) => {
+    const run = runShim(fx, ["status"], { PATH: nodeOnlyPath(fx) });
     const before = readdirSync(fx.home).sort();
-    const run = runShim(fx, ["status"], { PATH: join(process.execPath, "..") });
     assert.equal(run.status, 127);
     assert.deepEqual(readdirSync(fx.home).sort(), before);
   });

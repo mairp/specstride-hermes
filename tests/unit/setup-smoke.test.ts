@@ -64,7 +64,7 @@ test("the stub CLI records argv, answers --protocol and refuses reverse", async 
       assert.equal(scripted.status, 0);
       assert.equal(scripted.stdout.trim(), "run-1 running");
       const calls = stubCalls(fx.stubLog);
-      assert.deepEqual(calls[0], { argv: ["--protocol"], cwd: process.cwd() });
+      assert.deepEqual(calls[0], { probe: true, argv: ["--protocol"], cwd: process.cwd() });
       assert.deepEqual(calls[2].argv, ["status"]);
     });
   } finally {

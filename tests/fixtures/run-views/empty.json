@@ -1,0 +1,135 @@
+{
+  "schema": "specstride.view/1",
+  "now": "2026-11-11T12:00:00.000Z",
+  "runId": null,
+  "workspaceId": "002a79217166a359f229bed6407c7301",
+  "feature": null,
+  "cursor": {
+    "file": null,
+    "offset": 0,
+    "lastSeq": 0
+  },
+  "state": "none",
+  "stateSince": "2026-11-11T12:00:00.000Z",
+  "transition": null,
+  "display": "none",
+  "liveness": "dead",
+  "conditions": {
+    "dead": false,
+    "stale": null,
+    "launchAbandoned": false
+  },
+  "launch": {
+    "launchId": null,
+    "reason": null,
+    "outcome": null,
+    "engineStartId": null
+  },
+  "progress": {
+    "phase": 0,
+    "phases": 0,
+    "phaseAttempt": 1,
+    "pass": 0,
+    "rejects": 0,
+    "malformed": 0,
+    "units": {
+      "done": 0,
+      "declared": 0
+    },
+    "elapsedSeconds": 0
+  },
+  "strategy": {
+    "strategy": null,
+    "microLevel": 0,
+    "layerOffReason": null
+  },
+  "phases": [],
+  "cards": [],
+  "lanes": [
+    {
+      "lane": "queued",
+      "cards": []
+    },
+    {
+      "lane": "proposing",
+      "cards": []
+    },
+    {
+      "lane": "verifying",
+      "cards": []
+    },
+    {
+      "lane": "reviewing",
+      "cards": []
+    },
+    {
+      "lane": "approved",
+      "cards": []
+    },
+    {
+      "lane": "blocked",
+      "cards": []
+    },
+    {
+      "lane": "paused",
+      "cards": []
+    },
+    {
+      "lane": "failed",
+      "cards": []
+    }
+  ],
+  "laneTable": {
+    "id": "kanban",
+    "version": "v1"
+  },
+  "attention": [],
+  "attentionOmitted": 0,
+  "budget": [],
+  "budgetOmitted": 0,
+  "processes": {
+    "holders": [],
+    "omitted": 0,
+    "cut": 0
+  },
+  "supervision": null,
+  "activity": {
+    "latestTool": null,
+    "observabilityMode": "off",
+    "observabilityReason": null
+  },
+  "telemetry": [],
+  "timeline": {
+    "rows": [],
+    "omitted": 0
+  },
+  "parallel": null,
+  "diagnostics": {
+    "skippedLines": 0,
+    "gaps": [],
+    "majorsSeen": [],
+    "majorsAccepted": {
+      "from": 1,
+      "to": 1
+    },
+    "majorsOutOfRange": 0,
+    "tornLastLine": false,
+    "fieldsCut": [],
+    "fieldsDropped": [],
+    "redactorFailed": false
+  },
+  "signature": {
+    "record": {},
+    "token": "00000000"
+  },
+  "stream": {
+    "first": null,
+    "last": null,
+    "runStartedAt": null,
+    "runEndedAt": null
+  },
+  "settled": {
+    "heartbeatLate": false,
+    "staleEventSec": 0
+  }
+}

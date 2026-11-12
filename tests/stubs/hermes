@@ -12,6 +12,13 @@
  * - `$STUB_HERMES_VERSION` — the `--version` line (default `hermes 0.22.2`);
  * - `$STUB_PLUGINS` — the `plugins list --json` body (a `{plugins: [...]}`);
  * - `$STUB_CONFIG` — a config-key → value map for `config get <key>`;
+ * - `$STUB_HERMES_SCRIPT` — its own scripted-step file, overridden by
+ *   `$STUB_SCRIPT` where both are set (T004 of feature 151);
+ * - the Kanban verbs of feature 151: `kanban create|show|list|schedule|
+ *   edit|complete|archive|promote|block|comment|dispatch`, each answering
+ *   a `{id, status}` JSON body when `--json` is given, with an optional
+ *   `-p <profile>` in front (T004);
+ * - a verb outside the closed set exits 2 and is logged `refused: true`;
  * - a failing `send` for F150-FR-037.
  *
  * Matching ignores a leading `-p <profile>` pair, so the doctor's
@@ -20,18 +27,61 @@
  */
 import { recordAndScript, emit } from "./_recorder.mjs";
 
-const { argv, answer } = recordAndScript();
+// Piped stdin, only when a test asks for it (bounded), as in the stub CLI.
+async function readStdin() {
+  if (process.env.STUB_CAPTURE_STDIN !== "1" || process.stdin.isTTY) return undefined;
+  const chunks = [];
+  process.stdin.on("data", (chunk) => chunks.push(chunk));
+  await new Promise((resolve) => {
+    process.stdin.on("end", resolve);
+    process.stdin.on("close", resolve);
+    process.stdin.on("error", resolve);
+    setTimeout(resolve, 2_000);
+  });
+  return chunks.length > 0 ? Buffer.concat(chunks).toString("utf8") : "";
+}
 
-const joined = argv.join(" ");
+const stdin = await readStdin();
+
+const KANBAN_VERBS = [
+  "create", "show", "list", "schedule", "edit", "complete", "archive",
+  "promote", "block", "comment", "dispatch",
+];
+
+// The default `{id, status}` body per Kanban verb (T004).
+const KANBAN_DEFAULTS = {
+  create: { id: "card-1", status: "todo" },
+  show: { id: "card-1", status: "todo" },
+  list: { id: "card-1", status: "todo" },
+  schedule: { id: "card-1", status: "scheduled" },
+  edit: { id: "card-1", status: "todo" },
+  complete: { id: "card-1", status: "done" },
+  archive: { id: "card-1", status: "archived" },
+  promote: { id: "card-1", status: "ready" },
+  block: { id: "card-1", status: "blocked" },
+  comment: { id: "card-1", status: "todo" },
+  dispatch: { id: "card-1", status: "claimed" },
+};
+
+const joinedRaw = process.argv.slice(2).join(" ");
 // The profile selector never changes what a verb means in the fixtures.
 const normalized = (() => {
   const parts = [];
-  for (let i = 0; i < argv.length; i += 1) {
-    if (argv[i] === "-p") { i += 1; continue; }
-    parts.push(argv[i]);
+  for (let i = 0; i < process.argv.length - 2; i += 1) {
+    const value = process.argv[2 + i];
+    if (value === "-p") { i += 1; continue; }
+    parts.push(value);
   }
   return parts.join(" ");
 })();
+// A Kanban verb outside the closed set is refused (T004): decided before the
+// one record the stub writes, so the refused flag lands on that line.
+const refused =
+  normalized.startsWith("kanban ") && !KANBAN_VERBS.includes(normalized.split(/\s+/)[1]);
+
+const { argv, answer } = recordAndScript({ stdin, refused });
+
+const joined = argv.join(" ") || joinedRaw;
 
 if (answer !== undefined && answer !== null) emit(answer);
 
@@ -77,5 +127,28 @@ for (const prefix of Object.keys(defaults)) {
   }
 }
 
+// The Kanban verbs of feature 151: a closed set; anything else is refused.
+if (normalized.startsWith("kanban ")) {
+  const verb = normalized.split(/\s+/)[1];
+  if (refused) {
+    process.stderr.write("stub hermes: refused kanban verb: " + verb + "\n");
+    process.exit(2);
+  }
+  if (answer !== undefined && answer !== null) emit(answer);
+  if (argv.includes("--json")) {
+    const body = { ...KANBAN_DEFAULTS[verb] };
+    if (verb === "list" && !process.env.STUB_HERMES_SINGLE_LIST) {
+      process.stdout.write(JSON.stringify([KANBAN_DEFAULTS.list]) + "\n");
+    } else {
+      process.stdout.write(JSON.stringify(body) + "\n");
+    }
+    process.exit(0);
+  }
+  process.stdout.write(`card-1: ${verb} ok\n`);
+  process.exit(0);
+}
+
+// A verb outside the closed set the fixtures know is refused (the refused
+// flag was already decided and logged on the one record above).
 process.stderr.write("stub hermes: no scripted answer for: " + joined + "\n");
 process.exit(2);

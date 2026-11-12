@@ -21,10 +21,10 @@ import {
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..");
 
-test("the table holds the 24 rows of the contract, HF-VERSION through HF-VERSION-FMT", () => {
-  assert.equal(hostFacts.length, 24);
+test("the table holds the 39 rows of the contract, HF-VERSION through HF-KANBAN-NOTIFY", () => {
+  assert.equal(hostFacts.length, 39);
   assert.equal(hostFacts[0].id, "HF-VERSION");
-  assert.equal(hostFacts[hostFacts.length - 1].id, "HF-VERSION-FMT");
+  assert.equal(hostFacts[hostFacts.length - 1].id, "HF-KANBAN-NOTIFY");
   const ids = hostFacts.map((row) => row.id);
   assert.equal(new Set(ids).size, ids.length, "row ids are unique");
 });
@@ -71,6 +71,8 @@ test("every unverified row carries a settling check", () => {
     "HF-SKILLS-LIST",
     "HF-PROFILE-CREATE",
     "HF-VERSION-FMT",
+    "HF-SESSION-USAGE", // U-151-10
+    "HF-KANBAN-NOTIFY", // U-151-05
   ];
   for (const id of expected) {
     const row = factById(id);

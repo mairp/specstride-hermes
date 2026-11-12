@@ -1,15 +1,43 @@
 #!/usr/bin/env node
 /**
- * The stub Specstride CLI of the Hermes host's fixtures (T008): a Node
- * executable that records its argv and cwd to `$STUB_LOG`, answers
- * `--protocol` with `$STUB_PROTOCOL` (default `1`), answers other verbs from
- * `$STUB_SCRIPT` (an argv-prefix → {stdout, stderr, exit} map), and exits 3
- * with `reverse specification is not in this build` for `reverse` unless the
- * script says otherwise (F150-FR-031, U-150-05).
+ * The stub Specstride CLI of the Hermes host's fixtures (T008 of 150, T003 of
+ * 151): a Node executable that records its argv and cwd to `$STUB_LOG`,
+ * answers `--protocol` with `$STUB_PROTOCOL` (default `1`) and marks that
+ * call `probe: true` in its log (F151-FR-051), answers the verbs the host
+ * may call (`status --json`, `wait --until-change …`) from `$STUB_SCRIPT`,
+ * and exits 3 with `reverse specification is not in this build` for
+ * `reverse` unless the script says otherwise (F150-FR-031, U-150-05).
+ * `$STUB_SCRIPT` maps an argv prefix to a step `{stdout, stderr, exit,
+ * delayMs}`; `delayMs` delays the answer. With `STUB_CAPTURE_STDIN=1` the
+ * piped stdin is read (bounded) and carried on the log line.
  */
 import { recordAndScript, emit } from "./_recorder.mjs";
 
-const { argv, answer } = recordAndScript();
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Piped stdin, only when a test asks for it, so a stub call never hangs.
+async function readStdin() {
+  if (process.env.STUB_CAPTURE_STDIN !== "1" || process.stdin.isTTY) return undefined;
+  const chunks = [];
+  let done = false;
+  const timer = setTimeout(() => { done = true; process.stdin.destroy(); }, 2_000);
+  process.stdin.on("data", (chunk) => chunks.push(chunk));
+  await new Promise((resolve) => {
+    process.stdin.on("end", resolve);
+    process.stdin.on("close", resolve);
+    process.stdin.on("error", resolve);
+    const poll = setInterval(() => { if (done) { clearInterval(poll); resolve(); } }, 20);
+    setTimeout(() => { clearInterval(poll); resolve(); }, 2_100);
+  });
+  clearTimeout(timer);
+  return chunks.length > 0 ? Buffer.concat(chunks).toString("utf8") : "";
+}
+
+const stdin = await readStdin();
+const isProbe = process.argv.slice(2).includes("--protocol");
+const { argv, answer } = recordAndScript({ probe: isProbe, stdin });
 
 if (argv.includes("--protocol")) {
   if (answer !== undefined && answer !== null) emit(answer);
@@ -17,7 +45,10 @@ if (argv.includes("--protocol")) {
   process.exit(0);
 }
 
-if (answer !== undefined && answer !== null) emit(answer);
+if (answer !== undefined && answer !== null) {
+  if (answer.delayMs) await sleep(Number(answer.delayMs));
+  emit(answer);
+}
 
 if (argv[0] === "reverse") {
   process.stderr.write("reverse specification is not in this build\n");

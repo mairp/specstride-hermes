@@ -1,0 +1,256 @@
+{
+  "schema": "specstride.view/1",
+  "now": "2026-11-11T12:00:00.000Z",
+  "runId": "run-launch-recorded",
+  "workspaceId": "002a79217166a359f229bed6407c7301",
+  "feature": "151-hermes-kanban",
+  "cursor": {
+    "file": "run:launch-recorded:events",
+    "offset": 0,
+    "lastSeq": 0
+  },
+  "state": "running",
+  "stateSince": "2026-11-11T12:00:00.000Z",
+  "transition": null,
+  "display": "running",
+  "liveness": "alive",
+  "conditions": {
+    "dead": false,
+    "stale": null,
+    "launchAbandoned": false
+  },
+  "launch": {
+    "launchId": "launch-recorded",
+    "reason": "first",
+    "outcome": null,
+    "engineStartId": null
+  },
+  "progress": {
+    "phase": 1,
+    "phases": 9,
+    "phaseAttempt": 1,
+    "pass": 0,
+    "rejects": 0,
+    "malformed": 0,
+    "units": {
+      "done": 0,
+      "declared": 0
+    },
+    "elapsedSeconds": 0
+  },
+  "strategy": {
+    "strategy": null,
+    "microLevel": 0,
+    "layerOffReason": null
+  },
+  "phases": [
+    {
+      "number": 1,
+      "title": "Setup",
+      "evidence": false,
+      "approved": false,
+      "feedback": false
+    }
+  ],
+  "cards": [
+    {
+      "id": "f151-p1-queued",
+      "feature": "151-hermes-kanban",
+      "phase": 1,
+      "lane": "queued",
+      "ruleId": "L-01",
+      "flags": {
+        "dead": false,
+        "stale": false,
+        "yielded": false
+      }
+    },
+    {
+      "id": "f151-p1-proposing",
+      "feature": "151-hermes-kanban",
+      "phase": 1,
+      "lane": "proposing",
+      "ruleId": "L-01",
+      "flags": {
+        "dead": false,
+        "stale": false,
+        "yielded": false
+      }
+    },
+    {
+      "id": "f151-p1-verifying",
+      "feature": "151-hermes-kanban",
+      "phase": 1,
+      "lane": "verifying",
+      "ruleId": "L-01",
+      "flags": {
+        "dead": false,
+        "stale": false,
+        "yielded": false
+      }
+    },
+    {
+      "id": "f151-p1-reviewing",
+      "feature": "151-hermes-kanban",
+      "phase": 1,
+      "lane": "reviewing",
+      "ruleId": "L-01",
+      "flags": {
+        "dead": false,
+        "stale": false,
+        "yielded": false
+      }
+    },
+    {
+      "id": "f151-p1-approved",
+      "feature": "151-hermes-kanban",
+      "phase": 1,
+      "lane": "approved",
+      "ruleId": "L-01",
+      "flags": {
+        "dead": false,
+        "stale": false,
+        "yielded": false
+      }
+    },
+    {
+      "id": "f151-p1-blocked",
+      "feature": "151-hermes-kanban",
+      "phase": 1,
+      "lane": "blocked",
+      "ruleId": "L-01",
+      "flags": {
+        "dead": false,
+        "stale": false,
+        "yielded": false
+      }
+    },
+    {
+      "id": "f151-p1-paused",
+      "feature": "151-hermes-kanban",
+      "phase": 1,
+      "lane": "paused",
+      "ruleId": "L-01",
+      "flags": {
+        "dead": false,
+        "stale": false,
+        "yielded": false
+      }
+    },
+    {
+      "id": "f151-p1-failed",
+      "feature": "151-hermes-kanban",
+      "phase": 1,
+      "lane": "failed",
+      "ruleId": "L-01",
+      "flags": {
+        "dead": false,
+        "stale": false,
+        "yielded": false
+      }
+    }
+  ],
+  "lanes": [
+    {
+      "lane": "queued",
+      "cards": [
+        "f151-p1-queued"
+      ]
+    },
+    {
+      "lane": "proposing",
+      "cards": [
+        "f151-p1-proposing"
+      ]
+    },
+    {
+      "lane": "verifying",
+      "cards": [
+        "f151-p1-verifying"
+      ]
+    },
+    {
+      "lane": "reviewing",
+      "cards": [
+        "f151-p1-reviewing"
+      ]
+    },
+    {
+      "lane": "approved",
+      "cards": [
+        "f151-p1-approved"
+      ]
+    },
+    {
+      "lane": "blocked",
+      "cards": [
+        "f151-p1-blocked"
+      ]
+    },
+    {
+      "lane": "paused",
+      "cards": [
+        "f151-p1-paused"
+      ]
+    },
+    {
+      "lane": "failed",
+      "cards": [
+        "f151-p1-failed"
+      ]
+    }
+  ],
+  "laneTable": {
+    "id": "kanban",
+    "version": "v1"
+  },
+  "attention": [],
+  "attentionOmitted": 0,
+  "budget": [],
+  "budgetOmitted": 0,
+  "processes": {
+    "holders": [],
+    "omitted": 0,
+    "cut": 0
+  },
+  "supervision": null,
+  "activity": {
+    "latestTool": null,
+    "observabilityMode": "off",
+    "observabilityReason": null
+  },
+  "telemetry": [],
+  "timeline": {
+    "rows": [],
+    "omitted": 0
+  },
+  "parallel": null,
+  "diagnostics": {
+    "skippedLines": 0,
+    "gaps": [],
+    "majorsSeen": [],
+    "majorsAccepted": {
+      "from": 1,
+      "to": 1
+    },
+    "majorsOutOfRange": 0,
+    "tornLastLine": false,
+    "fieldsCut": [],
+    "fieldsDropped": [],
+    "redactorFailed": false
+  },
+  "signature": {
+    "record": {},
+    "token": "00000000"
+  },
+  "stream": {
+    "first": null,
+    "last": null,
+    "runStartedAt": null,
+    "runEndedAt": null
+  },
+  "settled": {
+    "heartbeatLate": false,
+    "staleEventSec": 0
+  }
+}

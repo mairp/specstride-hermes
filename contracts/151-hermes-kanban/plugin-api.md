@@ -47,8 +47,8 @@ Every 200 body is a JSON object with an `answer` of the closed set "API answers"
 | `view` | `{answer, view, source, cursor, lastGoodAt}` | a view to show; `source` is `engine` or `workspace-reader` |
 | `unchanged` | `{answer, cursor}` | the cursor's signature equals the view's |
 | `no-run` | `{answer}` | the engine answered a valid view with state `none` and the reader found no card |
-| `absent` | `{answer, reason}` | no engine answer and no reader card (CLI missing, non-zero exit, invalid view, reader off) |
-| `refused-schema` | `{answer, line}` | a view outside the supported schema major |
+| `absent` | `{answer, reason}` | no usable engine answer and no reader card (CLI missing, non-zero exit including the `no-feature` / `no-state` envelopes, invalid view, reader off) |
+| `refused-schema` | `{answer, line}` | the engine answered a view outside the supported schema major and the reader found no card |
 | `unavailable` | `{answer, line}` | the handler itself failed; the line names the doctor |
 | `run-changed` | `{answer}` (409) | the token is bound to another run |
 
@@ -70,8 +70,8 @@ value is sent as 100 and logged once).
 
 ## Engine memo (F151-FR-039)
 
-After an engine answer for a workspace that is unavailable, or is a valid view with no card while
-the reader gave cards, the handler does not ask the engine for that workspace for 60 s and answers
+After an engine answer for a workspace that is unavailable, is a view of an unsupported schema major, or is a valid view with no card
+while the reader gave cards, the handler does not ask the engine for that workspace for 60 s and answers
 from the reader at once. At most 64 workspaces; an engine view that carries a card deletes the
 entry. Beside the newest view per token this memo is the only state the handler
 holds; it writes no file.

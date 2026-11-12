@@ -1,0 +1,133 @@
+{
+  "schema": "specstride.view/1",
+  "now": "2026-11-11T12:00:00.000Z",
+  "runId": "run-launch-recorded",
+  "workspaceId": "002a79217166a359f229bed6407c7301",
+  "feature": "151-hermes-kanban",
+  "cursor": {
+    "file": "run:launch-recorded:events",
+    "offset": 0,
+    "lastSeq": 0
+  },
+  "state": "running",
+  "stateSince": "2026-11-11T12:00:00.000Z",
+  "transition": null,
+  "display": "running",
+  "liveness": "alive",
+  "conditions": {
+    "dead": false,
+    "stale": null,
+    "launchAbandoned": false
+  },
+  "launch": {
+    "launchId": "launch-recorded",
+    "reason": "first",
+    "outcome": null,
+    "engineStartId": null
+  },
+  "progress": {
+    "phase": 1,
+    "phases": 9,
+    "phaseAttempt": 1,
+    "pass": 0,
+    "rejects": 0,
+    "malformed": 0,
+    "units": {
+      "done": 0,
+      "declared": 0
+    },
+    "elapsedSeconds": 0
+  },
+  "strategy": {
+    "strategy": null,
+    "microLevel": 0,
+    "layerOffReason": null
+  },
+  "phases": [
+    {
+      "number": 1,
+      "title": "Setup",
+      "evidence": false,
+      "approved": false,
+      "feedback": false
+    }
+  ],
+  "cards": [],
+  "lanes": [],
+  "laneTable": {
+    "id": "kanban",
+    "version": "v1"
+  },
+  "attention": [
+    {
+      "kind": "budget-alert",
+      "key": "budget:run",
+      "since": "2026-11-11T12:00:00.000Z",
+      "oneLine": "budget-alert",
+      "need": null,
+      "next": "status --json",
+      "fields": {}
+    }
+  ],
+  "attentionOmitted": 0,
+  "budget": [
+    {
+      "scope": "run",
+      "role": "proposer",
+      "costClass": "model",
+      "spent": 1.5,
+      "tokens": 1000,
+      "cap": 10,
+      "fraction": 0.15,
+      "level": "loud",
+      "notional": false,
+      "quota": "ok"
+    }
+  ],
+  "budgetOmitted": 0,
+  "processes": {
+    "holders": [],
+    "omitted": 0,
+    "cut": 0
+  },
+  "supervision": null,
+  "activity": {
+    "latestTool": null,
+    "observabilityMode": "off",
+    "observabilityReason": null
+  },
+  "telemetry": [],
+  "timeline": {
+    "rows": [],
+    "omitted": 0
+  },
+  "parallel": null,
+  "diagnostics": {
+    "skippedLines": 0,
+    "gaps": [],
+    "majorsSeen": [],
+    "majorsAccepted": {
+      "from": 1,
+      "to": 1
+    },
+    "majorsOutOfRange": 0,
+    "tornLastLine": false,
+    "fieldsCut": [],
+    "fieldsDropped": [],
+    "redactorFailed": false
+  },
+  "signature": {
+    "record": {},
+    "token": "00000000"
+  },
+  "stream": {
+    "first": null,
+    "last": null,
+    "runStartedAt": null,
+    "runEndedAt": null
+  },
+  "settled": {
+    "heartbeatLate": false,
+    "staleEventSec": 0
+  }
+}

@@ -87,7 +87,7 @@ export function addWorkspaces(fx: WatchFixture, count: number): string[] {
 }
 
 /** A stub CLI scripting `wait --until-change` (through `STUB_SCRIPT`). */
-export function writeScript(fx: WatchFixture, script: Record<string, { stdout?: string; stderr?: string; exit?: number }>): void {
+export function writeScript(fx: WatchFixture, script: Record<string, { stdout?: string; stderr?: string; exit?: number; delayMs?: number }>): void {
   const file = join(fx.root, "stub-script.json");
   writeFileSync(file, JSON.stringify(script));
   const cli = join(fx.stubs, "specstride");
@@ -105,6 +105,7 @@ export function writeScript(fx: WatchFixture, script: Record<string, { stdout?: 
       "for (const prefix of Object.keys(script).sort((a, b) => b.length - a.length)) {",
       "  if (key === prefix || key.startsWith(prefix + ' ')) {",
       "    const answer = script[prefix];",
+      "    if (answer.delayMs) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, answer.delayMs);",
       "    if (answer.stdout) process.stdout.write(answer.stdout + '\\n');",
       "    if (answer.stderr) process.stderr.write(answer.stderr + '\\n');",
       "    process.exit(answer.exit ?? 0);",

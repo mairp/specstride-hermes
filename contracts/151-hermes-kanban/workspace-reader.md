@@ -14,8 +14,8 @@ read-only, spawns no process, writes nothing, and is not a channel to the CLI.
 |---|---|---|
 | 1 | The engine memo does not hold for the workspace (§8) | the engine is asked through the shim: `status --json`, or `wait --until-change` on an engine cursor |
 | 2 | The engine view validates and carries ≥ 1 card | that view, `source: engine`; the reader is **not** called |
-| 3 | The engine's answer is unavailable (probe refused, non-zero exit, body not JSON, invalid view), or is a valid view with 0 cards | the reader is called; a reader view with ≥ 1 card is the view, `source: workspace-reader` |
-| 4 | The reader finds no card | the engine's own answer stands: a valid engine view is used as it is (`no-run` when its state is `none`; a run with no card yet keeps its root card); an unavailable answer gives `absent` |
+| 3 | The engine's answer is unavailable (probe refused, non-zero exit including the `no-feature` / `no-state` envelopes, body not JSON, invalid view), is a view of an unsupported schema major, or is a valid view with 0 cards | the reader is called; a reader view with ≥ 1 card is the view, `source: workspace-reader` |
+| 4 | The reader finds no card | the engine's own answer stands: a valid engine view is used as it is (`no-run` only when its state is `none`; a run with no card yet keeps its root card); an unsupported schema major gives `refused-schema`; every other unavailable answer gives `absent` |
 
 Ground (probe of 2026-11-11, `research/E-dsh-kanban-lessons.md` §2.1, §2.6): engine `27e7d71b`
 exits 0 with `state: "none"`, 0 cards, `runId: null` in three workspaces where the reader finds 10,
@@ -132,11 +132,11 @@ a guard fails the test on any `child_process` use from `src/kanban/reader/`.
 ## 8. Engine memo (F151-FR-039)
 
 Held by the caller (`view-source.ts`), not by the reader: after an engine answer for a workspace
-that is unavailable, **or is a valid view with no card while the reader gave cards**, the engine is
-not asked for 60 000 ms; at most 64 workspaces; an engine view that carries a card deletes the
+that is unavailable, is a view of an unsupported schema major, **or is a valid view with no card while the reader gave cards**,
+the engine is not asked for 60 000 ms; at most 64 workspaces; an engine view that carries a card deletes the
 entry. dsh memoizes only `unavailable` (`route.ts:58-60, 70-83`); the empty answer is added because
 at engine `27e7d71b` it is the standing answer, and asking every 5 s would be the spawn-per-poll
-fault the memo exists to stop. Consequence: the engine starting to describe a run is seen within
+fault the memo exists to stop; an unsupported schema major is memoized for the same reason. Consequence: the engine starting to describe a run is seen within
 60 s.
 
 ## 9. Marking and retirement (F151-FR-035, F151-FR-041, F151-FR-042)

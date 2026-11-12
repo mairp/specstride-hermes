@@ -42,7 +42,8 @@ const PIN = HERMES_VERSION_PIN;
 
 /**
  * The rows, in the order of contracts/150-host-hermes/host-facts.md —
- * `HF-VERSION` through `HF-VERSION-FMT`, 24 rows.
+ * `HF-VERSION` through `HF-VERSION-FMT` (24 rows), then the 15 rows added by
+ * 151 (HF-DASH-* / HF-SESSION-USAGE / HF-KANBAN-*).
  */
 export const hostFacts: readonly HostFactRow[] = Object.freeze([
   {
@@ -285,6 +286,176 @@ export const hostFacts: readonly HostFactRow[] = Object.freeze([
     status: "unverified",
     settlingCheck: "T066",
     usedBy: ["F150-FR-016"],
+  },
+  // The 15 rows appended by 151 (contracts/150-host-hermes/host-facts.md,
+  // "Rows added by 151, 2026-11-11" and "Kanban rows added by 151").
+  {
+    id: "HF-DASH-TOKENS",
+    fact:
+      "(added by 151, 2026-11-11) The dashboard exposes the theme tokens `--color-foreground`, `-card`, `-card-foreground`, `-primary`, `-primary-foreground`, `-secondary`, `-secondary-foreground`, `-muted`, `-muted-foreground`, `-accent`, `-accent-foreground`, `-destructive`, `-destructive-foreground`, `-success`, `-warning`, `-border`, `-input`, `-ring`, `-popover`, `-popover-foreground`",
+    source: "web/src/index.css:154-181",
+    verifiedOn: "2026-11-11",
+    pin: PIN,
+    status: "verified",
+    settlingCheck: null,
+    usedBy: ["F151-FR-001"],
+  },
+  {
+    id: "HF-DASH-THEME-SWITCH",
+    fact:
+      "(added by 151, 2026-11-11) A theme switch sets the variables on the document root, so a plugin subtree follows without a reload",
+    source: "web/src/themes/context.tsx:349-386; website/docs/user-guide/features/extending-the-dashboard.md:788-795",
+    verifiedOn: "2026-11-11",
+    pin: PIN,
+    status: "verified",
+    settlingCheck: "U-151-13: person-run switch with the tab open",
+    usedBy: ["F151-FR-001"],
+  },
+  {
+    id: "HF-DASH-SDK",
+    fact:
+      "(added by 151, 2026-11-11) `window.__HERMES_PLUGIN_SDK__` gives `sdkVersion`, `React`, `hooks`, `api`, `fetchJSON`, `authedFetch`, `buildWsUrl`, `buildWsAuthParam`, `components`, `utils`, `useI18n`",
+    source: "web/src/plugins/registry.ts:118-191",
+    verifiedOn: "2026-11-11",
+    pin: PIN,
+    status: "verified",
+    settlingCheck: "151's live tab lane loads the bundle",
+    usedBy: ["F151-FR-001"],
+  },
+  {
+    id: "HF-DASH-API-404",
+    fact:
+      "(added by 151, 2026-11-11) An `/api/…` path no route matches, an unmounted `/api/plugins/<name>/…` route, and the routes of a `plugin_api.py` that failed to import answer 404 JSON, never the SPA page; authentication answers 401 first",
+    source:
+      "hermes_cli/web_server_dashboard.py:227-233, 943-960, 1045-1047; hermes_cli/web_server.py:674-683",
+    verifiedOn: "2026-11-11",
+    pin: PIN,
+    status: "verified",
+    settlingCheck: "U-151-12: 151's live tab lane requests a route of a disabled plugin",
+    usedBy: ["F151-FR-002"],
+  },
+  {
+    id: "HF-DASH-CSS",
+    fact:
+      "(added by 151, 2026-11-11) A dashboard manifest's `css` field names a stylesheet injected as a `<link>` on plugin load",
+    source:
+      "website/docs/user-guide/features/extending-the-dashboard.md:776-788; hermes_cli/web_server_dashboard.py:550",
+    verifiedOn: "2026-11-11",
+    pin: PIN,
+    status: "readme-only",
+    settlingCheck: "151's live tab lane",
+    usedBy: ["F151-FR-001"],
+  },
+  {
+    id: "HF-SESSION-USAGE",
+    fact:
+      "(added by 151, 2026-11-11) Hermes keeps per-session usage (`input_tokens`, `output_tokens`, `estimated_cost_usd`) in its state database; whether a session can be joined to a run and read without opening that database",
+    source: "hermes_state_schema.py:85-90",
+    verifiedOn: null,
+    pin: PIN,
+    status: "unverified",
+    settlingCheck: "U-151-10",
+    usedBy: ["F151-FR-003"],
+  },
+  {
+    id: "HF-KANBAN-CLI",
+    fact:
+      "(added by 151, 2026-11-11) `hermes kanban create` takes `--tenant`, `--assignee` and `--idempotency-key`; a repeated create with the same key is a no-op",
+    source: "hermes_cli/kanban_parser.py:84, 167, 181 †; research/C-hermes-surface.md:158",
+    verifiedOn: "2026-11-08",
+    pin: PIN,
+    status: "verified",
+    settlingCheck: "151 live dispatcher lane",
+    usedBy: ["F151-FR-010"],
+  },
+  {
+    id: "HF-KANBAN-NONSPAWN",
+    fact:
+      "(added by 151, 2026-11-11) A card whose assignee is not a Hermes profile is bucketed `skipped_nonspawnable` in every lane, and `kanban.default_assignee` does not apply to it",
+    source: "hermes_cli/kanban_db_dispatch.py:2042-2061 †, :2400-2410",
+    verifiedOn: "2026-11-08",
+    pin: PIN,
+    status: "verified",
+    settlingCheck:
+      "U-151-02: 151 live dispatcher lane (also that `create --assignee` accepts a non-profile name)",
+    usedBy: ["F151-FR-010"],
+  },
+  {
+    id: "HF-KANBAN-BLOCK",
+    fact:
+      "(added by 151, 2026-11-11) Every block is sticky (`recompute_ready` does not promote it); a second block of the same kind routes the card to `triage` (`BLOCK_RECURRENCE_LIMIT = 2`)",
+    source: "hermes_cli/kanban_db.py:114 †, :2005-2020, 3239-3264",
+    verifiedOn: "2026-11-08",
+    pin: PIN,
+    status: "verified",
+    settlingCheck: null,
+    usedBy: ["F151-FR-011"],
+  },
+  {
+    id: "HF-KANBAN-PROMOTE",
+    fact:
+      "(added by 151, 2026-11-11) `recompute_ready` promotes a `todo` card whose parents are done, including a card with no parents",
+    source: "hermes_cli/kanban_db.py:2063-2110 †",
+    verifiedOn: "2026-11-08",
+    pin: PIN,
+    status: "verified",
+    settlingCheck: null,
+    usedBy: ["F151-FR-011"],
+  },
+  {
+    id: "HF-KANBAN-RUNNING",
+    fact:
+      "(added by 151, 2026-11-11) A `running` card without a claim is reconciled to `ready`",
+    source: "hermes_cli/kanban_db_dispatch.py:846-862",
+    verifiedOn: "2026-11-08",
+    pin: PIN,
+    status: "verified",
+    settlingCheck: null,
+    usedBy: ["F151-FR-011"],
+  },
+  {
+    id: "HF-KANBAN-TRIAGE",
+    fact:
+      "(added by 151, 2026-11-11) `kanban.auto_decompose` is on by default: a card in `triage` is handed to a model on a dispatch tick",
+    source: "hermes_cli/config_defaults.py:1941 †",
+    verifiedOn: "2026-11-08",
+    pin: PIN,
+    status: "verified",
+    settlingCheck: "U-151-07: tick test with `auto_decompose` on",
+    usedBy: ["F151-FR-012"],
+  },
+  {
+    id: "HF-KANBAN-SCHEDULED",
+    fact:
+      "(added by 151, 2026-11-11) `scheduled` is entered from `todo`, `ready`, `running` and `blocked` and is not dispatchable",
+    source: "hermes_cli/kanban_db.py:3889-3915 †",
+    verifiedOn: "2026-11-08",
+    pin: PIN,
+    status: "verified",
+    settlingCheck: null,
+    usedBy: ["F151-FR-012"],
+  },
+  {
+    id: "HF-KANBAN-HOOK",
+    fact:
+      "(added by 151, 2026-11-11) `on_kanban_task_updated` carries field names only; lifecycle moves fire other hooks",
+    source: "research/P00-plan-grounding.md P2-6",
+    verifiedOn: "2026-11-08",
+    pin: PIN,
+    status: "verified",
+    settlingCheck: null,
+    usedBy: ["F151-FR-013"],
+  },
+  {
+    id: "HF-KANBAN-NOTIFY",
+    fact:
+      "(added by 151, 2026-11-11) `kanban notify-subscribe` delivers through the card owner's profile adapter; whether it delivers for a non-profile assignee",
+    source: "research/C-hermes-surface.md:163",
+    verifiedOn: null,
+    pin: PIN,
+    status: "unverified",
+    settlingCheck: "U-151-05: model-free probe with a stub Telegram adapter",
+    usedBy: ["F151-FR-014"],
   },
 ]);
 

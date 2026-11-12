@@ -23,8 +23,14 @@ import { hermesProfile } from "../src/profile.ts";
 import { insertFrontmatter, validateFrontmatter } from "../src/frontmatter.ts";
 import { hermesShimScript, assertShimFileName, SHIM_FILE_NAME, shimBuildChecks } from "../src/shim.ts";
 import { checkReferenceClosure, checkNoEngineCopy, allGateFindings } from "../src/gates.ts";
+import { writeGeneratedClosedSets } from "./gen-kanban-values.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+
+// T007: the kanban closed-set code tables are generated, never edited by
+// hand; every build refreshes src/kanban/generated/closed-sets.ts from the
+// closed-sets JSON before any gate runs over the sources.
+writeGeneratedClosedSets();
 
 function fail(message: string): never {
   console.error("build failed: " + message);

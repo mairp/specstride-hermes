@@ -8,6 +8,7 @@ import { strict as assert } from "node:assert";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { performance } from "node:perf_hooks";
 import {
   NOTICE_MAX_BYTES,
   TRIGGER_KINDS,
@@ -152,12 +153,14 @@ test("a change is sent within the same watcher cycle as the wait return", async 
   try {
     addWorkspaces(fx, 1);
     writeScript(fx, { wait: { stdout: CHANGE_LINE, exit: 0 } });
-    const start = Date.now();
+    // "Same cycle" is asserted structurally: the send happened before the run
+    // returned, exactly once, against exactly one wait. No wall-clock bound:
+    // an absolute ms limit is load-dependent and flaked on CI.
     const run = runWatchOnce(fx);
-    const elapsed = Date.now() - start;
     assert.equal(run.status, 0, run.stderr);
     assert.equal(sendCalls(fx).length, 1);
-    assert.ok(elapsed < 1_000, `cycle took ${elapsed} ms`);
+    assert.equal(cliCalls(fx).filter((call) => call.argv[0] === "wait").length, 1);
+    assert.equal(cliCalls(fx).filter((call) => call.argv.includes("--protocol")).length, 1);
   } finally {
     fx.cleanup();
   }
@@ -166,22 +169,50 @@ test("a change is sent within the same watcher cycle as the wait return", async 
 test("three workspaces wait concurrently; a change in the third is delivered at once", async () => {
   const fx = watchFixture();
   try {
-    const workspaces = addWorkspaces(fx, 3);
-    writeScript(fx, { wait: { stdout: CHANGE_LINE, exit: 0 } });
-    // Workspace 3 holds a different precomputed line, so only its cycle sees a change.
-    const { writeStatus } = await import("../../src/watch/status-line.ts");
-    writeStatus(fx.home, workspaces[0], CHANGE_LINE);
-    writeStatus(fx.home, workspaces[1], CHANGE_LINE);
-    writeStatus(fx.home, workspaces[2], "run=run-1 st=deriving cursor=5 next=/specstride status");
-    const start = Date.now();
-    const run = runWatchOnce(fx);
-    const elapsed = Date.now() - start;
-    assert.equal(run.status, 0, run.stderr);
-    assert.equal(sendCalls(fx).length, 1, run.stderr);
-    assert.equal(sendCalls(fx)[0].stdin, "[specstride] run-1 st=running — /specstride status");
-    assert.ok(elapsed < 1_000, `three waits took ${elapsed} ms (they must run concurrently)`);
-    const waits = cliCalls(fx).filter((call) => call.argv[0] === "wait");
-    assert.equal(waits.length, 3);
+    // Concurrency is measured against a baseline, not an absolute clock: each
+    // wait holds a deterministic 600 ms delay, so a serial wave would take at
+    // least 3 × (spawn + 600 ms) and a concurrent one about 1 × it. The run is
+    // compared with its own single-workspace baseline, so load spikes cancel.
+    const DELAY_MS = 600;
+    const singleFx = watchFixture();
+    try {
+      addWorkspaces(singleFx, 1);
+      writeScript(singleFx, { wait: { stdout: CHANGE_LINE, exit: 0, delayMs: DELAY_MS } });
+      // Three runs; the max absorbs a load spike that hits a single baseline
+      // measurement, so the comparison below is never made against an
+      // unloaded outlier baseline.
+      let baseline = 0;
+      for (let i = 0; i < 3; i++) {
+        const t0 = performance.now();
+        assert.equal(runWatchOnce(singleFx).status, 0, singleFx.stderr);
+        baseline = Math.max(baseline, performance.now() - t0);
+      }
+      const workspaces = addWorkspaces(fx, 3);
+      writeScript(fx, { wait: { stdout: CHANGE_LINE, exit: 0, delayMs: DELAY_MS } });
+      // Workspace 3 holds a different precomputed line, so only its cycle sees a change.
+      const { writeStatus } = await import("../../src/watch/status-line.ts");
+      writeStatus(fx.home, workspaces[0], CHANGE_LINE);
+      writeStatus(fx.home, workspaces[1], CHANGE_LINE);
+      writeStatus(fx.home, workspaces[2], "run=run-1 st=deriving cursor=5 next=/specstride status");
+      const start = performance.now();
+      const run = runWatchOnce(fx);
+      const elapsed = performance.now() - start;
+      assert.equal(run.status, 0, run.stderr);
+      assert.equal(sendCalls(fx).length, 1, run.stderr);
+      assert.equal(sendCalls(fx)[0].stdin, "[specstride] run-1 st=running — /specstride status");
+      const waits = cliCalls(fx).filter((call) => call.argv[0] === "wait");
+      assert.equal(waits.length, 3);
+      // Serial execution costs ≈ 3 × baseline; concurrent ≈ 1 × baseline.
+      // 2.8 × sits well above the concurrent cost while staying below serial
+      // even when the baseline measured low; against the max of three
+      // baselines it tolerates a transient load spike during the measured run.
+      assert.ok(
+        elapsed < 2.8 * baseline,
+        `three waits took ${Math.round(elapsed)} ms against a ${Math.round(baseline)} ms baseline (they must run concurrently)`,
+      );
+    } finally {
+      singleFx.cleanup();
+    }
   } finally {
     fx.cleanup();
   }
