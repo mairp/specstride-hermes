@@ -54,7 +54,7 @@ type Scope =
 type PlannedFile = { readonly rel: string; readonly bytes: Buffer };
 
 type Parsed =
-  | { command: "install" | "uninstall"; scope: Scope }
+  | { command: "install" | "uninstall"; scope: Scope; withKanban: boolean }
   | { usageError: string };
 
 function sha256(bytes: Buffer | string): string {
@@ -93,6 +93,7 @@ export function parseInstallArgs(argv: readonly string[]): Parsed {
   const rest = args.slice(1);
   let scope: Scope | undefined;
   let scopeFlags = 0;
+  let withKanban = false;
   for (let i = 0; i < rest.length; i += 1) {
     const flag = rest[i];
     if (flag === "--profile") {
@@ -108,14 +109,16 @@ export function parseInstallArgs(argv: readonly string[]): Parsed {
       scope = { kind: "project", root: projectRoot(projectOverride) };
       scopeFlags += 1;
     } else if (flag === "--with-kanban") {
-      // 151's projection (out of scope here): accepted, adds nothing yet.
+      // 151's projection: install the kanban module (src/kanban, src/tab,
+      // the dashboard assets) beside the roots, version-checked.
+      withKanban = true;
     } else {
       return { usageError: `unknown flag: ${flag}` };
     }
   }
   if (scopeFlags > 1) return { usageError: "give exactly one of --profile <p>, --user, --project" };
   if (scope === undefined) scope = { kind: "profile", profile: "specstride" };
-  return { command, scope };
+  return { command, scope, withKanban };
 }
 
 /** The roots a scope installs into: plain skills, bundled plugin (null for project). */
@@ -308,8 +311,93 @@ function runHermes(argv: readonly string[]): { ok: boolean; missing?: boolean; o
   return { ok: true, output: done.stdout ?? "" };
 }
 
+/** The version of this package (the kanban module must carry exactly it). */
+function packageVersion(): string {
+  try {
+    const pkg = JSON.parse(fs.readFileSync(join(PACKAGE_ROOT, "package.json"), "utf8")) as { version?: string };
+    return typeof pkg.version === "string" ? pkg.version : "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
+
+/** The kanban module source directories (src/tab and the dashboard when the build ships them). */
+function kanbanSources(): { rel: string; bytes: Buffer }[] {
+  const out: { rel: string; bytes: Buffer }[] = [];
+  const roots: [string, string][] = [
+    [join(PACKAGE_ROOT, "src", "kanban"), "src/kanban"],
+    [join(PACKAGE_ROOT, "src", "tab"), "src/tab"],
+    [join(PACKAGE_ROOT, "hermes-plugin", "specstride", "dashboard"), "dashboard"],
+  ];
+  for (const [source, prefix] of roots) {
+    if (!fs.existsSync(source)) continue;
+    const walk = (dir: string) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+        const abs = join(dir, entry.name);
+        if (entry.isDirectory()) walk(abs);
+        else out.push({ rel: `${prefix}/${relative(source, abs).split(/[\\/]/).join("/")}`, bytes: fs.readFileSync(abs) });
+      }
+    };
+    walk(source);
+  }
+  return out;
+}
+
+/** The base home a kanban module install lands in, per scope. */
+function kanbanBaseOf(scope: Scope): string {
+  if (scope.kind === "project") return join(scope.root, ".hermes");
+  return process.env.HERMES_HOME ?? join(homedir(), ".hermes");
+}
+
+/**
+ * Install the kanban module (T039): `src/kanban`, `src/tab` and the
+ * dashboard assets, under `<home>/specstride-host/kanban/module`, with a
+ * marker recording the package version. A module of another version is
+ * refused — the install must equal the package's own.
+ */
+function installKanbanModule(scope: Scope): CliResult | null {
+  const base = kanbanBaseOf(scope);
+  const moduleDir = join(base, "specstride-host", "kanban", "module");
+  const markerPath = join(moduleDir, "kanban.json");
+  const version = packageVersion();
+  if (fs.existsSync(markerPath)) {
+    try {
+      const existing = JSON.parse(fs.readFileSync(markerPath, "utf8")) as { version?: string };
+      if (existing.version !== version) {
+        return {
+          exit: 1,
+          stdout: "",
+          stderr: `refuse ${moduleDir} — kanban module of version ${String(existing.version)} is installed; this package is ${version}\n`,
+        };
+      }
+      return { exit: 0, stdout: "kanban module already installed, unchanged\n", stderr: "" };
+    } catch {
+      return { exit: 1, stdout: "", stderr: `refuse ${markerPath} — torn kanban module marker\n` };
+    }
+  }
+  const files = kanbanSources();
+  if (files.length === 0) return { exit: 1, stdout: "", stderr: "refuse kanban module — no module sources ship in this package\n" };
+  const record: { schema: string; version: string; files: { path: string; sha256: string }[] } = {
+    schema: "specstride.kanban-module/1",
+    version,
+    files: [],
+  };
+  for (const file of files) {
+    const abs = join(moduleDir, file.rel);
+    fs.mkdirSync(dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, file.bytes);
+    record.files.push({ path: file.rel, sha256: sha256(file.bytes) });
+  }
+  atomicWrite(markerPath, JSON.stringify(record, null, 2) + "\n");
+  return {
+    exit: 0,
+    stdout: files.map((f) => `installed ${join(moduleDir, f.rel)}`).join("\n") + `\ninstalled ${markerPath}\n`,
+    stderr: "",
+  };
+}
+
 /** Install: evaluate every root, then write, then record, then enable. */
-function install(scope: Scope): CliResult {
+function install(scope: Scope, withKanban = false): CliResult {
   const stdout: string[] = [];
   const roots = rootsOf(scope);
   const withReverse = cliAcceptsReverse();
@@ -353,6 +441,13 @@ function install(scope: Scope): CliResult {
     stdout.push("enable the plugin with: hermes plugins enable specstride");
   } else {
     stdout.push(`trust the project skills with: hermes skills trust ${scope.root}`);
+  }
+  // The kanban module (T039), last: its refusal rolls nothing back of the roots.
+  if (withKanban) {
+    const kanban = installKanbanModule(scope);
+    if (kanban === null) return { exit: 1, stdout: "", stderr: "refuse kanban module\n" };
+    if (kanban.exit !== 0) return { exit: kanban.exit, stdout: kanban.stdout, stderr: kanban.stderr };
+    stdout.push(kanban.stdout.trimEnd());
   }
   return { exit: 0, stdout: stdout.join("\n") + "\n", stderr: "" };
 }
@@ -450,7 +545,7 @@ export function run(argv: readonly string[]): CliResult {
   if ("usageError" in parsed) {
     return { exit: 3, stdout: "", stderr: `specstride-host-hermes: ${parsed.usageError}\n` };
   }
-  if (parsed.command === "install") return install(parsed.scope);
+  if (parsed.command === "install") return install(parsed.scope, parsed.withKanban);
   return uninstall(parsed.scope);
 }
 

@@ -80,3 +80,27 @@ export function acceptView(raw: unknown): AcceptedView | RefusedView {
       : null;
   return { ok: true, view: raw, raw: record, source, cards, featureDetails };
 }
+
+/**
+ * Accept a view whose closed-set enums the reader itself extends (a reader
+ * card's `ruleId: W-…`, a lane the map does not know): the same additive
+ * lenient reads as `acceptView`, without re-running `isRunView` on a body
+ * this host already trusts — the reader's own in-process output, or a view
+ * handed in through a test seam. Unknown members stay passthrough.
+ */
+export function acceptKnownView(raw: Record<string, unknown>): AcceptedView {
+  const accepted = acceptView(raw);
+  if (accepted.ok) return accepted;
+  const list = Array.isArray(raw.cards) ? raw.cards : [];
+  return {
+    ok: true,
+    view: raw as unknown as AcceptedView["view"],
+    raw,
+    source: raw.source === "workspace-reader" ? "workspace-reader" : "engine",
+    cards: list.map(() => ({ rule: null, ruleId: null, title: null, detail: null })),
+    featureDetails:
+      typeof raw.featureDetails === "object" && raw.featureDetails !== null
+        ? (raw.featureDetails as Record<string, unknown>)
+        : null,
+  };
+}

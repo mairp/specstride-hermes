@@ -49,6 +49,13 @@ switch (command) {
     process.exitCode = await runWatch(argv.slice(1));
     break;
   }
+  case "kanban": {
+    // 151's sync sidecar: `kanban sync [--once] [--workspace <dir>]`.
+    const { run: kanbanRun } = await import("../src/kanban/sync.ts");
+    // The sync verb leaves its exit code in the process status.
+    process.exit(await kanbanRun(argv.slice(1)));
+    break;
+  }
   case "eval": {
     // The paid lane (T068): a person starts it, the build never does.
     const { runEval } = await import("../src/evals/driver.ts");
@@ -62,6 +69,7 @@ switch (command) {
         "       specstride-host-hermes uninstall [--profile <p> | --user | --project]\n" +
         "       specstride-host-hermes doctor [--json]\n" +
         "       specstride-host-hermes curate reconcile [--dry-run] [--feature <prefix>]\n" +
+        "       specstride-host-hermes kanban sync [--once] [--workspace <dir>]\n" +
         "       specstride-host-hermes watch [--once] [--print-unit]\n" +
         "       specstride-host-hermes eval <suite> [--lane paid|local]\n",
     );

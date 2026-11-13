@@ -155,6 +155,11 @@ export function registerKanban(hook: () => void | Promise<void>): void {
   kanbanHook = hook;
 }
 
+/** Whether a Kanban hook is registered (spec 151's installer test reads it). */
+export function kanbanHookIsSet(): boolean {
+  return kanbanHook !== null;
+}
+
 function defaultShimPath(): string {
   const built = join(PACKAGE_ROOT, "bin", "specstride-hermes.mjs");
   if (existsSync(built)) return built;
