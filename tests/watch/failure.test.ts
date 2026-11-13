@@ -64,7 +64,9 @@ test("a failed delivery does not delay the next cycle", async () => {
     const second = await withStubEnv(fx, () => runCycle({ home: fx.home, log: () => {} }));
     const secondElapsed = Date.now() - secondStart;
     assert.equal(second.workspaces, 1);
-    assert.ok(secondElapsed < 1_000, `next cycle took ${secondElapsed} ms`);
+    // A backoff would be tens of seconds; under a loaded CI runner the cycle
+    // itself can take seconds of process starts, so the bound is generous.
+    assert.ok(secondElapsed < 3_000, `next cycle took ${secondElapsed} ms`);
     assert.ok(firstElapsed < 5_000, `first cycle took ${firstElapsed} ms`);
     const waits = cliCalls(fx).filter((call) => call.argv[0] === "wait");
     assert.equal(waits.length, 2, "both cycles waited once per workspace");
