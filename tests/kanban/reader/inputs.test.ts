@@ -70,8 +70,8 @@ test("the path builders spell the ten input rows of §7", () => {
   assert.equal(leasePath(ws, "f", "run-launch-a"), join(ws, ".specstride", "features", "f", "runs", "run-launch-a", "lease.json"));
   assert.equal(pipelineStatePath(ws, "f", "launch-a"), join(ws, ".specstride", "state", "pipeline", "f", "runs", "launch-a", "state.json"));
   // Both control-root spellings sit under $XDG_STATE_HOME.
-  assert.equal(root16, join(state, "specstride", "workspaces", "002a79217166a359"));
-  assert.equal(full, join(state, "specstride", "workspaces", "002a79217166a359f229bed6407c7301"));
+  assert.equal(root16, join(state, ".specstride", "workspaces", "002a79217166a359"));
+  assert.equal(full, join(state, ".specstride", "workspaces", "002a79217166a359f229bed6407c7301"));
   assert.equal(controlRunEventsPath(root16, "r-1"), join(root16, "runs", "r-1", "events.jsonl"));
   assert.equal(controlRunsPath(root16), join(root16, "runs"));
   assert.equal(controlProcsPath(root16), join(root16, "procs.json"));

@@ -127,6 +127,51 @@ export function buildReaderInputsAllowList(): RegExp[] {
   return regexes;
 }
 
+/**
+ * The directories a listing may touch: every ancestor directory of every
+ * member path of the closed set (a member with a trailing "/" contributes
+ * itself as well). Derived structurally from the same member specs, so the
+ * list can never grow beyond what the closed set admits.
+ */
+export function buildReaderDirList(): RegExp[] {
+  const inputs = readerInputs();
+  const specs: string[] = [];
+  for (const member of inputs.members) {
+    if (member.n === 8) {
+      specs.push(
+        "~/.specstride/workspaces/<id16>/runs/*/events.jsonl",
+        "~/.specstride/workspaces/<id16>/procs.json",
+        "~/.specstride/workspaces/<id16>/features/<f>/{approvals,bound,micro,feedback,set-aside}/",
+        "~/.specstride/workspaces/<id16>/features/<f>/{ledger,loop}.json",
+      );
+      continue;
+    }
+    if (member.n === 10) {
+      specs.push("~/.dsh/sessions/<cwd-slug>/");
+      continue;
+    }
+    if (member.n === 9) continue; // /proc listings are never wanted
+    specs.push(member.path);
+  }
+  const rules: RegExp[] = [];
+  const seen = new Set<string>();
+  for (const spec of specs) {
+    // Every ancestor directory of the member is listable; a member given
+    // with a trailing "/" contributes itself as well. Reuse the member
+    // compiler on the prefix (a trailing "/" opens the subtree).
+    const parts = spec.replace(/\s*\((?:names( and sizes)?|also[^)]*)\)/g, "").replace(/^~\//, "").split("/").filter((part) => part !== "");
+    for (let depth = 1; depth <= parts.length; depth += 1) {
+      for (const rule of memberRegexes(parts.slice(0, depth).join("/"))) {
+        if (!seen.has(rule.source)) {
+          seen.add(rule.source);
+          rules.push(rule);
+        }
+      }
+    }
+  }
+  return rules;
+}
+
 export type PortStat = {
   size: number;
   isFile: boolean;
@@ -148,13 +193,39 @@ export class FsPort {
   readonly home: string;
   private readonly tree: Map<string, string> | null;
   private readonly allow: RegExp[];
+  private readonly allowDirs: RegExp[];
   private readonly asked: string[] = [];
+  /** Paths the guard refused (a readdir swallowed by `listSafe` shows here). */
+  readonly refusals: string[] = [];
 
   constructor(options: FsPortOptions = {}) {
-    this.root = (options.root ?? "/").replace(/\/+$/, "") || "/";
+    this.root = resolve((options.root ?? "/").replace(/\/+$/, "") || "/");
     this.home = options.home ?? this.root;
     this.tree = options.tree ?? null;
     this.allow = buildReaderInputsAllowList();
+    this.allowDirs = buildReaderDirList();
+  }
+
+  /** The guard, for a DIRECTORY listing: a directory that holds (or is an
+   * ancestor of) an allowed path is listable — enumerating names is how a
+   * read-only reader uses a glob. A directory that cannot contain an
+   * allowed path is refused like any other path outside the list. */
+  private guardDir(path: string): string {
+    try {
+      return this.guard(path);
+    } catch (error) {
+      if (!(error instanceof OutsideReaderInputsError)) throw error;
+      const normalized = this.normalize(path);
+      const relative = normalized.startsWith("/proc")
+        ? normalized
+        : normalized.slice(this.root.length) || "/";
+      const posix = relative.split(sep).join("/");
+      if (posix !== "/" && posix !== "" && this.allowDirs.some((rule) => rule.test(posix))) {
+        return normalized;
+      }
+      this.refusals.push(normalized);
+      throw error;
+    }
   }
 
   /** Normalize to an absolute POSIX path under the port root. */
@@ -200,7 +271,7 @@ export class FsPort {
   }
 
   readdir(path: string): string[] {
-    const p = this.guard(path);
+    const p = this.guardDir(path);
     if (this.tree) {
       const prefix = p.endsWith("/") ? p : p + "/";
       const names = new Set<string>();
@@ -242,6 +313,15 @@ export class FsPort {
     } catch {
       return false;
     }
+  }
+
+  /** Raw bytes, up to `limit` — the FilePort.bytes of the reader port. */
+  bytes(path: string, limit?: number): Uint8Array {
+    const p = this.guard(path);
+    const buffer = this.tree
+      ? Buffer.from(this.treeGet(p) ?? "", "utf8")
+      : readFileSync(p);
+    return limit === undefined ? buffer : buffer.subarray(0, limit);
   }
 
   /** Every path that was asked for, in order, normalized. */

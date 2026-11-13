@@ -130,9 +130,11 @@ export function pipelineStatePath(workspace: string, feature: string, launch: st
   return join(workspace, ".specstride", "state", "pipeline", feature, "runs", launch, "state.json");
 }
 
-/** Row 8: the control roots — `<id16>` and the full id, both under `$XDG_STATE_HOME`. */
-export function controlRoot(xdgStateHome: string, workspaceId: string): string {
-  return join(xdgStateHome, "specstride", "workspaces", workspaceId);
+/** Row 8: the control roots — `<id16>` and the full id, both under the
+ * state home's `.specstride/workspaces/` (the spelling of the closed set
+ * and of every recorded fixture; US7 aligned the builder to it). */
+export function controlRoot(stateHome: string, workspaceId: string): string {
+  return join(stateHome, ".specstride", "workspaces", workspaceId);
 }
 
 export function controlRunEventsPath(root: string, runId: string): string {
