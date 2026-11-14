@@ -103,8 +103,10 @@ test("a bracket that is not a tag ends the tag run, and ticks are read", () => {
   assert.deepEqual(scopes.parallel[0].files, ["a.ts"]);
 });
 
-test("this repository's own 151 tasks.md parses with story scopes", () => {
-  const tasks151 = readFileSync(join(ROOT, "specs", "151-hermes-kanban", "tasks.md"), "utf8");
+const TASKS_151_PATH = join(ROOT, "specs", "151-hermes-kanban", "tasks.md");
+
+test("this repository's own 151 tasks.md parses with story scopes", { skip: existsSync(TASKS_151_PATH) ? false : "no specs/ in this clone (public split)" }, () => {
+  const tasks151 = readFileSync(TASKS_151_PATH, "utf8");
   const scopes = parseScopes(tasks151);
   assert.ok(scopes.phases.length >= 10);
   assert.ok(scopes.stories["US7"].length > 0, "US7 exists in 151's tasks.md");

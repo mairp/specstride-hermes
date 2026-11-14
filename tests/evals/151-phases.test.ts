@@ -868,9 +868,13 @@ export async function dispatch(c: CaseInput): Promise<unknown> {
         MIRROR_SETS.find((s) => s.feature === `${campaign}-hermes-kanban`) ??
         MIRROR_SETS.find((s) => s.feature === `${campaign}-host-hermes`);
       const files = set?.files ?? [];
+      // A public clone has no specs/ (local since the split): there the tracked
+      // mirror is what ships, so it must be complete; the byte check needs the source.
+      const hasSource = set !== undefined && existsSync(join(ROOT, "specs", set.feature, "contracts"));
       const byteEqual = files.every((f) => {
         const a = join(ROOT, "specs", set!.feature, "contracts", f);
         const b = join(ROOT, "contracts", set!.feature, f);
+        if (!hasSource) return existsSync(b);
         if (!existsSync(a) || !existsSync(b)) return false;
         return readFileSync(a).equals(readFileSync(b));
       });
