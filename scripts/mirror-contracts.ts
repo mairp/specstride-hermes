@@ -5,7 +5,7 @@
  * A plain file copy: no `git`, no diff, no history — the mirror test asserts
  * byte equality, so a stale or edited mirror fails the build.
  */
-import { copyFileSync, mkdirSync, readdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -35,10 +35,13 @@ export const MIRROR_SETS: Array<{ feature: string; files: string[] }> = [
 ];
 
 /** Copy each contract of the mirror set from its spec source into the
- * tracked mirror, byte for byte. Returns the mirror paths written. */
+ * tracked mirror, byte for byte. Returns the mirror paths written.
+ * A public clone has no `specs/` (it stays local since the split), so a set
+ * whose spec source is absent is skipped: the tracked mirror is what ships. */
 export function mirrorContracts(root: string = ROOT): string[] {
   const written: string[] = [];
   for (const set of MIRROR_SETS) {
+    if (!existsSync(join(root, "specs", set.feature, "contracts"))) continue;
     const outDir = join(root, "contracts", set.feature);
     mkdirSync(outDir, { recursive: true });
     for (const name of set.files) {
