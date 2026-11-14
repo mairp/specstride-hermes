@@ -7,8 +7,8 @@
  * rule (F151-FR-041, OD-151-9) lives here: a feature that was never run (the
  * reader's one `W0` card) gets NO card on the native board.
  *
- * This pass implements the root cards (T027); stage cards (T028) and
- * attention placeholders (T047) follow in their own passes.
+ * Root cards (T027), stage cards (T028) and attention cards (T047) are all
+ * implemented here; the create → promote → block sequence lives in diff.ts.
  */
 import { columnForLane, columnForRunState, type MapVersion } from "./map.ts";
 import type { AcceptedView } from "./view-read.ts";
@@ -35,6 +35,8 @@ export interface WantedCard {
   readonly unknown: boolean;
   readonly title: string;
   readonly body: string;
+  /** Attention cards only: the verbatim one-line text `block` carries (F151-FR-014). */
+  readonly attentionText: string | null;
   readonly tenant: typeof TENANT;
   readonly assignee: typeof ASSIGNEE;
 }
@@ -90,6 +92,7 @@ function engineRootCard(view: AcceptedView, options: ProjectOptions): WantedCard
     unknown: mapped.unknown,
     title,
     body,
+    attentionText: null,
     tenant: TENANT,
     assignee: ASSIGNEE,
   };
@@ -130,6 +133,7 @@ function readerRootCards(view: AcceptedView, options: ProjectOptions): WantedCar
         `source: workspace-reader`,
         ...footer(options.hostVersion),
       ].join("\n"),
+      attentionText: null,
       tenant: TENANT,
       assignee: ASSIGNEE,
     });
@@ -260,6 +264,7 @@ export function stageCardsOf(view: AcceptedView, options: ProjectOptions): Wante
       unknown: mapped.unknown,
       title,
       body: body.join("\n"),
+      attentionText: null,
       tenant: TENANT,
       assignee: ASSIGNEE,
     });
@@ -268,11 +273,12 @@ export function stageCardsOf(view: AcceptedView, options: ProjectOptions): Wante
 }
 
 /**
- * The attention placeholders of a view (T047's target; contracts
+ * The attention cards of a view (T047; contracts
  * /card-projection.md "Attention card"): one per entry of `attention[]`,
- * key `specstride:<run-id>:attn:<item-id>`, in `blocked`. The create →
- * promote → block sequence is the sync's business; this is only the wanted
- * card. Never-run features get no attention card either (F151-FR-041).
+ * key `specstride:<run-id>:attn:<item-id>`, in `blocked`, carrying the
+ * view's text verbatim in `attentionText`. The create → promote → block
+ * sequence is the diff's business. Never-run features get no attention card
+ * either (F151-FR-041).
  */
 export function attentionCardsOf(view: AcceptedView, options: ProjectOptions): WantedCard[] {
   const out: WantedCard[] = [];
@@ -297,6 +303,7 @@ export function attentionCardsOf(view: AcceptedView, options: ProjectOptions): W
       unknown: false,
       title: cut(`[attention] ${item.kind} · ${runId}`, TITLE_BYTES),
       body: body.join("\n"),
+      attentionText: item.oneLine,
       tenant: TENANT,
       assignee: ASSIGNEE,
     });

@@ -12,21 +12,21 @@ OpenAI SDK: 2.24.0
 Update available — run 'hermes update'
 - install --user: exit 0
 skip specstride-reverse — the CLI has no reverse verb
-installed /tmp/specstride-live-home-B2QezU/skills/specstride/specstride-curate/SKILL.md
-installed /tmp/specstride-live-home-B2QezU/skills/specstride/specstride-run/SKILL.md
-installed /tmp/specstride-live-home-B2QezU/skills/specstride/specstride-status/SKILL.md
-installed /tmp/specstride-live-home-B2QezU/plugins/specstride/__init__.py
-installed /tmp/specstride-live-home-B2QezU/plugins/specstride/__pycache__/__init__.cpython-313.pyc
-installed /tmp/specstride-live-home-B2QezU/plugins/specstride/__pycache__/__init__.cpython-314.pyc
-installed /tmp/specstride-live-home-B2QezU/plugins/specstride/__pycache__/_forward.cpython-313.pyc
-installed /tmp/specstride-live-home-B2QezU/plugins/specstride/__pycache__/_forward.cpython-314.pyc
-installed /tmp/specstride-live-home-B2QezU/plugins/specstride/_forward.py
-installed /tmp/specstride-live-home-B2QezU/plugins/specstride/plugin.yaml
-installed /tmp/specstride-live-home-B2QezU/plugins/specstride/skills/specstride-curate/SKILL.md
-installed /tmp/specstride-live-home-B2QezU/plugins/specstride/skills/specstride-doctor/SKILL.md
-installed /tmp/specstride-live-home-B2QezU/plugins/specstride/skills/specstride-run/SKILL.md
-installed /tmp/specstride-live-home-B2QezU/plugins/specstride/skills/specstride-status/SKILL.md
-installed /tmp/specstride-live-home-B2QezU/plugins/specstride/_paths.json
+installed /tmp/specstride-live-home-fKVnKk/skills/specstride/specstride-curate/SKILL.md
+installed /tmp/specstride-live-home-fKVnKk/skills/specstride/specstride-run/SKILL.md
+installed /tmp/specstride-live-home-fKVnKk/skills/specstride/specstride-status/SKILL.md
+installed /tmp/specstride-live-home-fKVnKk/plugins/specstride/__init__.py
+installed /tmp/specstride-live-home-fKVnKk/plugins/specstride/__pycache__/__init__.cpython-313.pyc
+installed /tmp/specstride-live-home-fKVnKk/plugins/specstride/__pycache__/__init__.cpython-314.pyc
+installed /tmp/specstride-live-home-fKVnKk/plugins/specstride/__pycache__/_forward.cpython-313.pyc
+installed /tmp/specstride-live-home-fKVnKk/plugins/specstride/__pycache__/_forward.cpython-314.pyc
+installed /tmp/specstride-live-home-fKVnKk/plugins/specstride/_forward.py
+installed /tmp/specstride-live-home-fKVnKk/plugins/specstride/plugin.yaml
+installed /tmp/specstride-live-home-fKVnKk/plugins/specstride/skills/specstride-curate/SKILL.md
+installed /tmp/specstride-live-home-fKVnKk/plugins/specstride/skills/specstride-doctor/SKILL.md
+installed /tmp/specstride-live-home-fKVnKk/plugins/specstride/skills/specstride-run/SKILL.md
+installed /tmp/specstride-live-home-fKVnKk/plugins/specstride/skills/specstride-status/SKILL.md
+installed /tmp/specstride-live-home-fKVnKk/plugins/specstride/_paths.json
 enable the plugin with: hermes plugins enable specstride
 - hermes skills list (HF-SKILLS-LIST, U-150-01): exit 0, render accepted=true
                       Installed Skills                       
@@ -66,7 +66,7 @@ Preparing the isolated Hermes runtime…
 Validation passed.
 - hermes profile create specstride-probe: exit 0
 
-Profile 'specstride-probe' created at /tmp/specstride-live-home-B2QezU/profiles/specstride-probe
+Profile 'specstride-probe' created at /tmp/specstride-live-home-fKVnKk/profiles/specstride-probe
 58 bundled skills synced.
 Wrapper created: /root/.local/bin/specstride-probe
 
@@ -77,7 +77,7 @@ Next steps:
 
   ⚠ This profile has no API keys yet. Run 'specstride-probe setup' first,
     or it will inherit keys from your shell environment.
-  Edit /tmp/specstride-live-home-B2QezU/profiles/specstride-probe/SOUL.md to customize personality
+  Edit /tmp/specstride-live-home-fKVnKk/profiles/specstride-probe/SOUL.md to customize personality
 - hermes -p specstride-probe plugins list --json (HF-PLUGINS-LIST): exit 0
 [
   {

@@ -1,4 +1,4 @@
-kanban dispatcher live lane — 2026-11-14T02:35:14.281Z
+kanban dispatcher live lane — 2026-11-14T04:19:09.208Z
 hermes --version: Hermes Agent v0.22.2 (2026.9.24) · stable · local d923a5eb487a
 Install directory: /root/.hermes/hermes-agent
 Install method: git
@@ -34,136 +34,136 @@ create+schedule specstride:live-rdr:blocked [blocked]: schedule exit 0
 create+schedule specstride:live-rdr:paused [paused]: schedule exit 0
 create+schedule specstride:live-rdr:failed [failed]: schedule exit 0
 projected cards: 26
-drag schedule specstride:live-eng:queued: exit 1 cannot schedule t_7a73115f
+drag schedule specstride:live-eng:queued: exit 1 cannot schedule t_7df4d1e6
 drag promote specstride:live-eng:queued: exit 1 
-drag schedule specstride:live-eng:queued: exit 1 cannot schedule t_7a73115f
+drag schedule specstride:live-eng:queued: exit 1 cannot schedule t_7df4d1e6
 drag promote specstride:live-eng:queued: exit 1 
-drag schedule specstride:live-eng:queued: exit 1 cannot schedule t_7a73115f
-drag schedule specstride:live-eng:proposing: exit 1 cannot schedule t_0184403c
+drag schedule specstride:live-eng:queued: exit 1 cannot schedule t_7df4d1e6
+drag schedule specstride:live-eng:proposing: exit 1 cannot schedule t_ac7cb2fd
 drag promote specstride:live-eng:proposing: exit 1 
-drag schedule specstride:live-eng:proposing: exit 1 cannot schedule t_0184403c
+drag schedule specstride:live-eng:proposing: exit 1 cannot schedule t_ac7cb2fd
 drag promote specstride:live-eng:proposing: exit 1 
-drag schedule specstride:live-eng:proposing: exit 1 cannot schedule t_0184403c
-drag schedule specstride:live-eng:verifying: exit 1 cannot schedule t_4286dc8d
+drag schedule specstride:live-eng:proposing: exit 1 cannot schedule t_ac7cb2fd
+drag schedule specstride:live-eng:verifying: exit 1 cannot schedule t_1dce9b11
 drag promote specstride:live-eng:verifying: exit 1 
-drag schedule specstride:live-eng:verifying: exit 1 cannot schedule t_4286dc8d
+drag schedule specstride:live-eng:verifying: exit 1 cannot schedule t_1dce9b11
 drag promote specstride:live-eng:verifying: exit 1 
-drag schedule specstride:live-eng:verifying: exit 1 cannot schedule t_4286dc8d
-drag schedule specstride:live-eng:reviewing: exit 1 cannot schedule t_49466cb0
+drag schedule specstride:live-eng:verifying: exit 1 cannot schedule t_1dce9b11
+drag schedule specstride:live-eng:reviewing: exit 1 cannot schedule t_fc932fd7
 drag promote specstride:live-eng:reviewing: exit 1 
-drag schedule specstride:live-eng:reviewing: exit 1 cannot schedule t_49466cb0
+drag schedule specstride:live-eng:reviewing: exit 1 cannot schedule t_fc932fd7
 drag promote specstride:live-eng:reviewing: exit 1 
-drag schedule specstride:live-eng:reviewing: exit 1 cannot schedule t_49466cb0
-drag schedule specstride:live-eng:approved: exit 1 cannot schedule t_b993d3da
+drag schedule specstride:live-eng:reviewing: exit 1 cannot schedule t_fc932fd7
+drag schedule specstride:live-eng:approved: exit 1 cannot schedule t_e215c7fc
 drag promote specstride:live-eng:approved: exit 1 
-drag schedule specstride:live-eng:approved: exit 1 cannot schedule t_b993d3da
+drag schedule specstride:live-eng:approved: exit 1 cannot schedule t_e215c7fc
 drag promote specstride:live-eng:approved: exit 1 
-drag schedule specstride:live-eng:approved: exit 1 cannot schedule t_b993d3da
-drag schedule specstride:live-eng:blocked: exit 1 cannot schedule t_6674e18e
+drag schedule specstride:live-eng:approved: exit 1 cannot schedule t_e215c7fc
+drag schedule specstride:live-eng:blocked: exit 1 cannot schedule t_8bd35a93
 drag promote specstride:live-eng:blocked: exit 1 
-drag schedule specstride:live-eng:blocked: exit 1 cannot schedule t_6674e18e
+drag schedule specstride:live-eng:blocked: exit 1 cannot schedule t_8bd35a93
 drag promote specstride:live-eng:blocked: exit 1 
-drag schedule specstride:live-eng:blocked: exit 1 cannot schedule t_6674e18e
-drag schedule specstride:live-eng:paused: exit 1 cannot schedule t_e676aebd
+drag schedule specstride:live-eng:blocked: exit 1 cannot schedule t_8bd35a93
+drag schedule specstride:live-eng:paused: exit 1 cannot schedule t_86c236ab
 drag promote specstride:live-eng:paused: exit 1 
-drag schedule specstride:live-eng:paused: exit 1 cannot schedule t_e676aebd
+drag schedule specstride:live-eng:paused: exit 1 cannot schedule t_86c236ab
 drag promote specstride:live-eng:paused: exit 1 
-drag schedule specstride:live-eng:paused: exit 1 cannot schedule t_e676aebd
-drag schedule specstride:live-eng:failed: exit 1 cannot schedule t_c0ba4c8d
+drag schedule specstride:live-eng:paused: exit 1 cannot schedule t_86c236ab
+drag schedule specstride:live-eng:failed: exit 1 cannot schedule t_b61acf0d
 drag promote specstride:live-eng:failed: exit 1 
-drag schedule specstride:live-eng:failed: exit 1 cannot schedule t_c0ba4c8d
+drag schedule specstride:live-eng:failed: exit 1 cannot schedule t_b61acf0d
 drag promote specstride:live-eng:failed: exit 1 
-drag schedule specstride:live-eng:failed: exit 1 cannot schedule t_c0ba4c8d
-drag schedule specstride:live-eng-state:created: exit 1 cannot schedule t_0629f7c8
+drag schedule specstride:live-eng:failed: exit 1 cannot schedule t_b61acf0d
+drag schedule specstride:live-eng-state:created: exit 1 cannot schedule t_6b554f40
 drag promote specstride:live-eng-state:created: exit 1 
-drag schedule specstride:live-eng-state:created: exit 1 cannot schedule t_0629f7c8
+drag schedule specstride:live-eng-state:created: exit 1 cannot schedule t_6b554f40
 drag promote specstride:live-eng-state:created: exit 1 
-drag schedule specstride:live-eng-state:created: exit 1 cannot schedule t_0629f7c8
-drag schedule specstride:live-eng-state:starting: exit 1 cannot schedule t_ff3beecd
+drag schedule specstride:live-eng-state:created: exit 1 cannot schedule t_6b554f40
+drag schedule specstride:live-eng-state:starting: exit 1 cannot schedule t_084e7017
 drag promote specstride:live-eng-state:starting: exit 1 
-drag schedule specstride:live-eng-state:starting: exit 1 cannot schedule t_ff3beecd
+drag schedule specstride:live-eng-state:starting: exit 1 cannot schedule t_084e7017
 drag promote specstride:live-eng-state:starting: exit 1 
-drag schedule specstride:live-eng-state:starting: exit 1 cannot schedule t_ff3beecd
-drag schedule specstride:live-eng-state:running: exit 1 cannot schedule t_44a747cf
+drag schedule specstride:live-eng-state:starting: exit 1 cannot schedule t_084e7017
+drag schedule specstride:live-eng-state:running: exit 1 cannot schedule t_4d7563bb
 drag promote specstride:live-eng-state:running: exit 1 
-drag schedule specstride:live-eng-state:running: exit 1 cannot schedule t_44a747cf
+drag schedule specstride:live-eng-state:running: exit 1 cannot schedule t_4d7563bb
 drag promote specstride:live-eng-state:running: exit 1 
-drag schedule specstride:live-eng-state:running: exit 1 cannot schedule t_44a747cf
-drag schedule specstride:live-eng-state:paused-quota: exit 1 cannot schedule t_cf4c1151
+drag schedule specstride:live-eng-state:running: exit 1 cannot schedule t_4d7563bb
+drag schedule specstride:live-eng-state:paused-quota: exit 1 cannot schedule t_92fafbfb
 drag promote specstride:live-eng-state:paused-quota: exit 1 
-drag schedule specstride:live-eng-state:paused-quota: exit 1 cannot schedule t_cf4c1151
+drag schedule specstride:live-eng-state:paused-quota: exit 1 cannot schedule t_92fafbfb
 drag promote specstride:live-eng-state:paused-quota: exit 1 
-drag schedule specstride:live-eng-state:paused-quota: exit 1 cannot schedule t_cf4c1151
-drag schedule specstride:live-eng-state:relaunching: exit 1 cannot schedule t_0146afb8
+drag schedule specstride:live-eng-state:paused-quota: exit 1 cannot schedule t_92fafbfb
+drag schedule specstride:live-eng-state:relaunching: exit 1 cannot schedule t_66d917f5
 drag promote specstride:live-eng-state:relaunching: exit 1 
-drag schedule specstride:live-eng-state:relaunching: exit 1 cannot schedule t_0146afb8
+drag schedule specstride:live-eng-state:relaunching: exit 1 cannot schedule t_66d917f5
 drag promote specstride:live-eng-state:relaunching: exit 1 
-drag schedule specstride:live-eng-state:relaunching: exit 1 cannot schedule t_0146afb8
-drag schedule specstride:live-eng-state:stopping: exit 1 cannot schedule t_87f9af08
+drag schedule specstride:live-eng-state:relaunching: exit 1 cannot schedule t_66d917f5
+drag schedule specstride:live-eng-state:stopping: exit 1 cannot schedule t_4b8907c4
 drag promote specstride:live-eng-state:stopping: exit 1 
-drag schedule specstride:live-eng-state:stopping: exit 1 cannot schedule t_87f9af08
+drag schedule specstride:live-eng-state:stopping: exit 1 cannot schedule t_4b8907c4
 drag promote specstride:live-eng-state:stopping: exit 1 
-drag schedule specstride:live-eng-state:stopping: exit 1 cannot schedule t_87f9af08
-drag schedule specstride:live-eng-state:blocked-on-human: exit 1 cannot schedule t_e32d9279
+drag schedule specstride:live-eng-state:stopping: exit 1 cannot schedule t_4b8907c4
+drag schedule specstride:live-eng-state:blocked-on-human: exit 1 cannot schedule t_badbca1d
 drag promote specstride:live-eng-state:blocked-on-human: exit 1 
-drag schedule specstride:live-eng-state:blocked-on-human: exit 1 cannot schedule t_e32d9279
+drag schedule specstride:live-eng-state:blocked-on-human: exit 1 cannot schedule t_badbca1d
 drag promote specstride:live-eng-state:blocked-on-human: exit 1 
-drag schedule specstride:live-eng-state:blocked-on-human: exit 1 cannot schedule t_e32d9279
-drag schedule specstride:live-eng-state:finished: exit 1 cannot schedule t_706e6d6d
+drag schedule specstride:live-eng-state:blocked-on-human: exit 1 cannot schedule t_badbca1d
+drag schedule specstride:live-eng-state:finished: exit 1 cannot schedule t_4da93799
 drag promote specstride:live-eng-state:finished: exit 1 
-drag schedule specstride:live-eng-state:finished: exit 1 cannot schedule t_706e6d6d
+drag schedule specstride:live-eng-state:finished: exit 1 cannot schedule t_4da93799
 drag promote specstride:live-eng-state:finished: exit 1 
-drag schedule specstride:live-eng-state:finished: exit 1 cannot schedule t_706e6d6d
-drag schedule specstride:live-eng-state:stopped: exit 1 cannot schedule t_376f755b
+drag schedule specstride:live-eng-state:finished: exit 1 cannot schedule t_4da93799
+drag schedule specstride:live-eng-state:stopped: exit 1 cannot schedule t_aff7b577
 drag promote specstride:live-eng-state:stopped: exit 1 
-drag schedule specstride:live-eng-state:stopped: exit 1 cannot schedule t_376f755b
+drag schedule specstride:live-eng-state:stopped: exit 1 cannot schedule t_aff7b577
 drag promote specstride:live-eng-state:stopped: exit 1 
-drag schedule specstride:live-eng-state:stopped: exit 1 cannot schedule t_376f755b
-drag schedule specstride:live-eng-state:failed: exit 1 cannot schedule t_2660b0a5
+drag schedule specstride:live-eng-state:stopped: exit 1 cannot schedule t_aff7b577
+drag schedule specstride:live-eng-state:failed: exit 1 cannot schedule t_bfeb94c5
 drag promote specstride:live-eng-state:failed: exit 1 
-drag schedule specstride:live-eng-state:failed: exit 1 cannot schedule t_2660b0a5
+drag schedule specstride:live-eng-state:failed: exit 1 cannot schedule t_bfeb94c5
 drag promote specstride:live-eng-state:failed: exit 1 
-drag schedule specstride:live-eng-state:failed: exit 1 cannot schedule t_2660b0a5
-drag schedule specstride:live-rdr:queued: exit 1 cannot schedule t_8fe79a48
+drag schedule specstride:live-eng-state:failed: exit 1 cannot schedule t_bfeb94c5
+drag schedule specstride:live-rdr:queued: exit 1 cannot schedule t_25d73d9a
 drag promote specstride:live-rdr:queued: exit 1 
-drag schedule specstride:live-rdr:queued: exit 1 cannot schedule t_8fe79a48
+drag schedule specstride:live-rdr:queued: exit 1 cannot schedule t_25d73d9a
 drag promote specstride:live-rdr:queued: exit 1 
-drag schedule specstride:live-rdr:queued: exit 1 cannot schedule t_8fe79a48
-drag schedule specstride:live-rdr:proposing: exit 1 cannot schedule t_fe868738
+drag schedule specstride:live-rdr:queued: exit 1 cannot schedule t_25d73d9a
+drag schedule specstride:live-rdr:proposing: exit 1 cannot schedule t_69ed96ac
 drag promote specstride:live-rdr:proposing: exit 1 
-drag schedule specstride:live-rdr:proposing: exit 1 cannot schedule t_fe868738
+drag schedule specstride:live-rdr:proposing: exit 1 cannot schedule t_69ed96ac
 drag promote specstride:live-rdr:proposing: exit 1 
-drag schedule specstride:live-rdr:proposing: exit 1 cannot schedule t_fe868738
-drag schedule specstride:live-rdr:verifying: exit 1 cannot schedule t_9cc687b2
+drag schedule specstride:live-rdr:proposing: exit 1 cannot schedule t_69ed96ac
+drag schedule specstride:live-rdr:verifying: exit 1 cannot schedule t_5f949bea
 drag promote specstride:live-rdr:verifying: exit 1 
-drag schedule specstride:live-rdr:verifying: exit 1 cannot schedule t_9cc687b2
+drag schedule specstride:live-rdr:verifying: exit 1 cannot schedule t_5f949bea
 drag promote specstride:live-rdr:verifying: exit 1 
-drag schedule specstride:live-rdr:verifying: exit 1 cannot schedule t_9cc687b2
-drag schedule specstride:live-rdr:reviewing: exit 1 cannot schedule t_d83edbc1
+drag schedule specstride:live-rdr:verifying: exit 1 cannot schedule t_5f949bea
+drag schedule specstride:live-rdr:reviewing: exit 1 cannot schedule t_7ee2815b
 drag promote specstride:live-rdr:reviewing: exit 1 
-drag schedule specstride:live-rdr:reviewing: exit 1 cannot schedule t_d83edbc1
+drag schedule specstride:live-rdr:reviewing: exit 1 cannot schedule t_7ee2815b
 drag promote specstride:live-rdr:reviewing: exit 1 
-drag schedule specstride:live-rdr:reviewing: exit 1 cannot schedule t_d83edbc1
-drag schedule specstride:live-rdr:approved: exit 1 cannot schedule t_027a9b4f
+drag schedule specstride:live-rdr:reviewing: exit 1 cannot schedule t_7ee2815b
+drag schedule specstride:live-rdr:approved: exit 1 cannot schedule t_e2ff8dbb
 drag promote specstride:live-rdr:approved: exit 1 
-drag schedule specstride:live-rdr:approved: exit 1 cannot schedule t_027a9b4f
+drag schedule specstride:live-rdr:approved: exit 1 cannot schedule t_e2ff8dbb
 drag promote specstride:live-rdr:approved: exit 1 
-drag schedule specstride:live-rdr:approved: exit 1 cannot schedule t_027a9b4f
-drag schedule specstride:live-rdr:blocked: exit 1 cannot schedule t_3745fa68
+drag schedule specstride:live-rdr:approved: exit 1 cannot schedule t_e2ff8dbb
+drag schedule specstride:live-rdr:blocked: exit 1 cannot schedule t_b6046cae
 drag promote specstride:live-rdr:blocked: exit 1 
-drag schedule specstride:live-rdr:blocked: exit 1 cannot schedule t_3745fa68
+drag schedule specstride:live-rdr:blocked: exit 1 cannot schedule t_b6046cae
 drag promote specstride:live-rdr:blocked: exit 1 
-drag schedule specstride:live-rdr:blocked: exit 1 cannot schedule t_3745fa68
-drag schedule specstride:live-rdr:paused: exit 1 cannot schedule t_ee95c39a
+drag schedule specstride:live-rdr:blocked: exit 1 cannot schedule t_b6046cae
+drag schedule specstride:live-rdr:paused: exit 1 cannot schedule t_220fe8fd
 drag promote specstride:live-rdr:paused: exit 1 
-drag schedule specstride:live-rdr:paused: exit 1 cannot schedule t_ee95c39a
+drag schedule specstride:live-rdr:paused: exit 1 cannot schedule t_220fe8fd
 drag promote specstride:live-rdr:paused: exit 1 
-drag schedule specstride:live-rdr:paused: exit 1 cannot schedule t_ee95c39a
-drag schedule specstride:live-rdr:failed: exit 1 cannot schedule t_9453a751
+drag schedule specstride:live-rdr:paused: exit 1 cannot schedule t_220fe8fd
+drag schedule specstride:live-rdr:failed: exit 1 cannot schedule t_12ac0012
 drag promote specstride:live-rdr:failed: exit 1 
-drag schedule specstride:live-rdr:failed: exit 1 cannot schedule t_9453a751
+drag schedule specstride:live-rdr:failed: exit 1 cannot schedule t_12ac0012
 drag promote specstride:live-rdr:failed: exit 1 
-drag schedule specstride:live-rdr:failed: exit 1 cannot schedule t_9453a751
+drag schedule specstride:live-rdr:failed: exit 1 cannot schedule t_12ac0012
 variant default: 100/100 dispatch ticks exited 0
 diagnostics (default): exit 0
 variant default-assignee: kanban.default_assignee=hermes

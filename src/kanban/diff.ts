@@ -4,8 +4,14 @@
  * F151-FR-040). Wanted (the projection) vs stored (our store) vs actual
  * (the read-back) → the minimal ordered verb list.
  *
- * Verbs of US1, in a stable order: `create`, `schedule`, `edit`,
- * `complete`, `archive` — never `link`, `claim`, `heartbeat`,
+ * Verbs of US1 and US3, in a stable order: `create`, `schedule`, `edit`,
+ * `complete`, `archive`, and — attention cards only (F151-FR-014) —
+ * `promote` then `block --kind needs_input <text verbatim>`: a new attention
+ * card is `create` → `promote` → `block`, exactly once; an attention card
+ * that the store holds as blocked is never blocked again (a re-block of the
+ * same kind routes to `triage`, P00 P2-2) and never unblocked; when the item
+ * leaves the view the card is archived, and a recurring item is a new card
+ * (new key → new create). Never `link`, `claim`, `heartbeat`,
  * `request-review`, `delete`, `decompose`, `specify`, `swarm` (there is no
  * code path here that could emit one). The signature is a pure sha256 over
  * the wanted set's material fields; the caller short-circuits on it before
@@ -18,7 +24,7 @@ import type { WantedCard } from "./project.ts";
 
 /** One planned verb: the verb, the card key and, when known, the Hermes id. */
 export interface PlannedVerb {
-  readonly verb: "create" | "schedule" | "edit" | "complete" | "archive";
+  readonly verb: "create" | "schedule" | "edit" | "complete" | "archive" | "promote" | "block";
   /** The card key — the idempotency key of the call. */
   readonly key: string;
   /** The Hermes id, when the verb addresses an existing card. */
@@ -27,6 +33,8 @@ export interface PlannedVerb {
   readonly card: WantedCard | null;
   /** The `--result` text of `complete`. */
   readonly result: string | null;
+  /** The verbatim block text of `block` (attention cards only). */
+  readonly blockText: string | null;
 }
 
 /** The stored card of the projection store (structural subset). */
@@ -100,9 +108,26 @@ export function planVerbs(inputs: PlanInputs): PlannedVerb[] {
   for (const card of inputs.wanted) {
     const stored = storedByKey.get(card.key);
     if (stored === undefined) {
+      if (card.role === "attention") {
+        // New attention card (F151-FR-014): `create` → `promote` →
+        // `block --kind needs_input <text verbatim>`; never `schedule`
+        // (the card belongs in `blocked`, where the map never puts a stage
+        // or root card) and the block happens once, at creation.
+        verbs.push({ verb: "create", key: card.key, id: null, card, result: null, blockText: null });
+        verbs.push({ verb: "promote", key: card.key, id: null, card: null, result: null, blockText: null });
+        verbs.push({
+          verb: "block",
+          key: card.key,
+          id: null,
+          card: null,
+          result: null,
+          blockText: card.attentionText ?? card.engineValue,
+        });
+        continue;
+      }
       // new → `create`, then `schedule` into the mapped column
-      verbs.push({ verb: "create", key: card.key, id: null, card, result: null });
-      verbs.push({ verb: "schedule", key: card.key, id: null, card, result: null });
+      verbs.push({ verb: "create", key: card.key, id: null, card, result: null, blockText: null });
+      verbs.push({ verb: "schedule", key: card.key, id: null, card, result: null, blockText: null });
       continue;
     }
     const actual = inputs.actual?.get(card.key);
@@ -115,7 +140,7 @@ export function planVerbs(inputs: PlanInputs): PlannedVerb[] {
       ((actual.assignee !== undefined && actual.assignee !== card.assignee) ||
         (actual.tenant !== undefined && actual.tenant !== card.tenant));
     if (foreignColumn || foreignGuards) {
-      verbs.push({ verb: "schedule", key: card.key, id: actual.hermesId, card, result: null });
+      verbs.push({ verb: "schedule", key: card.key, id: actual.hermesId, card, result: null, blockText: null });
     }
     if (stored.column !== "done" && card.column === "done") {
       // `scheduled` → `done`: the engine verb of the transition table
@@ -125,19 +150,20 @@ export function planVerbs(inputs: PlanInputs): PlannedVerb[] {
         id: stored.hermesId,
         card,
         result: `${card.label} (engine)`,
+        blockText: null,
       });
       continue;
     }
     if (materialDiffers(stored, card) && !stored.humanEdited) {
       // `scheduled` → `scheduled` with a changed body member: one edit
-      verbs.push({ verb: "edit", key: card.key, id: stored.hermesId, card, result: null });
+      verbs.push({ verb: "edit", key: card.key, id: stored.hermesId, card, result: null, blockText: null });
     }
   }
 
   // Keys the store holds that the wanted set no longer holds → archive.
   for (const stored of inputs.stored) {
     if (!wantedKeys.has(stored.key)) {
-      verbs.push({ verb: "archive", key: stored.key, id: stored.hermesId, card: null, result: null });
+      verbs.push({ verb: "archive", key: stored.key, id: stored.hermesId, card: null, result: null, blockText: null });
     }
   }
   return verbs;

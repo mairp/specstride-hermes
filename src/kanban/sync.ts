@@ -24,7 +24,7 @@ import { projectAll, type WantedCard } from "./project.ts";
 import { planVerbs, signatureOfWanted, type PlannedVerb, type StoredCard, type ActualCard } from "./diff.ts";
 import { ProjectionStore, type ProjectedCard, type ProjectionRecord } from "./store.ts";
 import { viewOf, type EngineMemo, type ViewSourceDeps } from "./view-source.ts";
-import { kanbanCreate, kanbanSchedule, kanbanEdit, kanbanComplete, kanbanArchive, kanbanShow, type KanbanCall } from "./hermes-kanban.ts";
+import { kanbanCreate, kanbanSchedule, kanbanEdit, kanbanComplete, kanbanArchive, kanbanShow, kanbanPromote, kanbanBlock, type KanbanCall } from "./hermes-kanban.ts";
 import { readWatchList } from "../watch/watch-list.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -172,6 +172,8 @@ export async function syncOnce(workspace: string, deps: SyncDeps): Promise<Cycle
     else if (verb.verb === "edit") call = kanbanEdit({ key: verb.key, id, title: verb.card?.title ?? "", body: verb.card?.body ?? "" });
     else if (verb.verb === "complete") call = kanbanComplete({ key: verb.key, id, result: verb.result ?? "" });
     else if (verb.verb === "archive") call = kanbanArchive({ key: verb.key, id });
+    else if (verb.verb === "promote") call = kanbanPromote({ key: verb.key, id });
+    else if (verb.verb === "block") call = kanbanBlock({ key: verb.key, id, text: verb.blockText ?? "" });
     if (call === null) continue;
     const out = await exec(call);
     if (out.exit !== 0) {

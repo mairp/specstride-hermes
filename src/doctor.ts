@@ -426,7 +426,10 @@ export function collectFindings(): Finding[] {
     findings.push({
       id: "host.kanban-plugin",
       severity: "ok",
-      message: "the Hermes Kanban is enabled; the 151 projection is not installed",
+      message:
+        "the Hermes Kanban is enabled; the 151 projection is not installed; " +
+        "notify-subscribe delivery for the non-profile assignee specstride-projection: unknown (U-151-05) — " +
+        "Telegram delivery belongs to the 150 notifier (specstride.notify.telegram)",
       blocking: false,
     });
   } else {
