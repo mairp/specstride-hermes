@@ -69,7 +69,7 @@ function harness(opts: { engine?: () => ShimAnswer; reader?: () => Record<string
     reader: () => opts.reader?.() ?? null,
     readBack: false,
     exec: async (call: KanbanCall) => {
-      executed.push({ verb: call.argv[4] ?? "", key: call.argv[call.argv.indexOf("--idempotency-key") + 1] ?? "" });
+      executed.push({ verb: call.argv[4] ?? "", key: call.key ?? "" });
       return { exit: 0, stdout: JSON.stringify({ id: `hermes-${nextId++}` }) + "\n", stderr: "" };
     },
     log: () => {},

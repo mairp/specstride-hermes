@@ -150,6 +150,8 @@ export async function syncOnce(workspace: string, deps: SyncDeps): Promise<Cycle
           key: card.key,
           hermesId: card.hermesId,
           column: typeof shown.column === "string" ? shown.column : card.column,
+          assignee: typeof shown.assignee === "string" ? shown.assignee : undefined,
+          tenant: typeof shown.tenant === "string" ? shown.tenant : undefined,
         });
       } catch {
         /* a torn show body: no actual row this cycle */

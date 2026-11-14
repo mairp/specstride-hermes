@@ -1,0 +1,179 @@
+kanban dispatcher live lane — 2026-11-14T02:35:14.281Z
+hermes --version: Hermes Agent v0.22.2 (2026.9.24) · stable · local d923a5eb487a
+Install directory: /root/.hermes/hermes-agent
+Install method: git
+Python: 3.14.7
+OpenAI SDK: 2.24.0
+Update available — run 'hermes update'
+pm repair: exit 0
+profile create specstride: exit 0
+create+schedule specstride:live-eng:queued [queued]: schedule exit 0
+create+schedule specstride:live-eng:proposing [proposing]: schedule exit 0
+create+schedule specstride:live-eng:verifying [verifying]: schedule exit 0
+create+schedule specstride:live-eng:reviewing [reviewing]: schedule exit 0
+create+schedule specstride:live-eng:approved [approved]: schedule exit 0
+create+schedule specstride:live-eng:blocked [blocked]: schedule exit 0
+create+schedule specstride:live-eng:paused [paused]: schedule exit 0
+create+schedule specstride:live-eng:failed [failed]: schedule exit 0
+create+schedule specstride:live-eng-state:created [created]: schedule exit 0
+create+schedule specstride:live-eng-state:starting [starting]: schedule exit 0
+create+schedule specstride:live-eng-state:running [running]: schedule exit 0
+create+schedule specstride:live-eng-state:paused-quota [paused-quota]: schedule exit 0
+create+schedule specstride:live-eng-state:relaunching [relaunching]: schedule exit 0
+create+schedule specstride:live-eng-state:stopping [stopping]: schedule exit 0
+create+schedule specstride:live-eng-state:blocked-on-human [blocked-on-human]: schedule exit 0
+create+schedule specstride:live-eng-state:finished [finished]: schedule exit 0
+create+schedule specstride:live-eng-state:stopped [stopped]: schedule exit 0
+create+schedule specstride:live-eng-state:failed [failed]: schedule exit 0
+create+schedule specstride:live-rdr:queued [queued]: schedule exit 0
+create+schedule specstride:live-rdr:proposing [proposing]: schedule exit 0
+create+schedule specstride:live-rdr:verifying [verifying]: schedule exit 0
+create+schedule specstride:live-rdr:reviewing [reviewing]: schedule exit 0
+create+schedule specstride:live-rdr:approved [approved]: schedule exit 0
+create+schedule specstride:live-rdr:blocked [blocked]: schedule exit 0
+create+schedule specstride:live-rdr:paused [paused]: schedule exit 0
+create+schedule specstride:live-rdr:failed [failed]: schedule exit 0
+projected cards: 26
+drag schedule specstride:live-eng:queued: exit 1 cannot schedule t_7a73115f
+drag promote specstride:live-eng:queued: exit 1 
+drag schedule specstride:live-eng:queued: exit 1 cannot schedule t_7a73115f
+drag promote specstride:live-eng:queued: exit 1 
+drag schedule specstride:live-eng:queued: exit 1 cannot schedule t_7a73115f
+drag schedule specstride:live-eng:proposing: exit 1 cannot schedule t_0184403c
+drag promote specstride:live-eng:proposing: exit 1 
+drag schedule specstride:live-eng:proposing: exit 1 cannot schedule t_0184403c
+drag promote specstride:live-eng:proposing: exit 1 
+drag schedule specstride:live-eng:proposing: exit 1 cannot schedule t_0184403c
+drag schedule specstride:live-eng:verifying: exit 1 cannot schedule t_4286dc8d
+drag promote specstride:live-eng:verifying: exit 1 
+drag schedule specstride:live-eng:verifying: exit 1 cannot schedule t_4286dc8d
+drag promote specstride:live-eng:verifying: exit 1 
+drag schedule specstride:live-eng:verifying: exit 1 cannot schedule t_4286dc8d
+drag schedule specstride:live-eng:reviewing: exit 1 cannot schedule t_49466cb0
+drag promote specstride:live-eng:reviewing: exit 1 
+drag schedule specstride:live-eng:reviewing: exit 1 cannot schedule t_49466cb0
+drag promote specstride:live-eng:reviewing: exit 1 
+drag schedule specstride:live-eng:reviewing: exit 1 cannot schedule t_49466cb0
+drag schedule specstride:live-eng:approved: exit 1 cannot schedule t_b993d3da
+drag promote specstride:live-eng:approved: exit 1 
+drag schedule specstride:live-eng:approved: exit 1 cannot schedule t_b993d3da
+drag promote specstride:live-eng:approved: exit 1 
+drag schedule specstride:live-eng:approved: exit 1 cannot schedule t_b993d3da
+drag schedule specstride:live-eng:blocked: exit 1 cannot schedule t_6674e18e
+drag promote specstride:live-eng:blocked: exit 1 
+drag schedule specstride:live-eng:blocked: exit 1 cannot schedule t_6674e18e
+drag promote specstride:live-eng:blocked: exit 1 
+drag schedule specstride:live-eng:blocked: exit 1 cannot schedule t_6674e18e
+drag schedule specstride:live-eng:paused: exit 1 cannot schedule t_e676aebd
+drag promote specstride:live-eng:paused: exit 1 
+drag schedule specstride:live-eng:paused: exit 1 cannot schedule t_e676aebd
+drag promote specstride:live-eng:paused: exit 1 
+drag schedule specstride:live-eng:paused: exit 1 cannot schedule t_e676aebd
+drag schedule specstride:live-eng:failed: exit 1 cannot schedule t_c0ba4c8d
+drag promote specstride:live-eng:failed: exit 1 
+drag schedule specstride:live-eng:failed: exit 1 cannot schedule t_c0ba4c8d
+drag promote specstride:live-eng:failed: exit 1 
+drag schedule specstride:live-eng:failed: exit 1 cannot schedule t_c0ba4c8d
+drag schedule specstride:live-eng-state:created: exit 1 cannot schedule t_0629f7c8
+drag promote specstride:live-eng-state:created: exit 1 
+drag schedule specstride:live-eng-state:created: exit 1 cannot schedule t_0629f7c8
+drag promote specstride:live-eng-state:created: exit 1 
+drag schedule specstride:live-eng-state:created: exit 1 cannot schedule t_0629f7c8
+drag schedule specstride:live-eng-state:starting: exit 1 cannot schedule t_ff3beecd
+drag promote specstride:live-eng-state:starting: exit 1 
+drag schedule specstride:live-eng-state:starting: exit 1 cannot schedule t_ff3beecd
+drag promote specstride:live-eng-state:starting: exit 1 
+drag schedule specstride:live-eng-state:starting: exit 1 cannot schedule t_ff3beecd
+drag schedule specstride:live-eng-state:running: exit 1 cannot schedule t_44a747cf
+drag promote specstride:live-eng-state:running: exit 1 
+drag schedule specstride:live-eng-state:running: exit 1 cannot schedule t_44a747cf
+drag promote specstride:live-eng-state:running: exit 1 
+drag schedule specstride:live-eng-state:running: exit 1 cannot schedule t_44a747cf
+drag schedule specstride:live-eng-state:paused-quota: exit 1 cannot schedule t_cf4c1151
+drag promote specstride:live-eng-state:paused-quota: exit 1 
+drag schedule specstride:live-eng-state:paused-quota: exit 1 cannot schedule t_cf4c1151
+drag promote specstride:live-eng-state:paused-quota: exit 1 
+drag schedule specstride:live-eng-state:paused-quota: exit 1 cannot schedule t_cf4c1151
+drag schedule specstride:live-eng-state:relaunching: exit 1 cannot schedule t_0146afb8
+drag promote specstride:live-eng-state:relaunching: exit 1 
+drag schedule specstride:live-eng-state:relaunching: exit 1 cannot schedule t_0146afb8
+drag promote specstride:live-eng-state:relaunching: exit 1 
+drag schedule specstride:live-eng-state:relaunching: exit 1 cannot schedule t_0146afb8
+drag schedule specstride:live-eng-state:stopping: exit 1 cannot schedule t_87f9af08
+drag promote specstride:live-eng-state:stopping: exit 1 
+drag schedule specstride:live-eng-state:stopping: exit 1 cannot schedule t_87f9af08
+drag promote specstride:live-eng-state:stopping: exit 1 
+drag schedule specstride:live-eng-state:stopping: exit 1 cannot schedule t_87f9af08
+drag schedule specstride:live-eng-state:blocked-on-human: exit 1 cannot schedule t_e32d9279
+drag promote specstride:live-eng-state:blocked-on-human: exit 1 
+drag schedule specstride:live-eng-state:blocked-on-human: exit 1 cannot schedule t_e32d9279
+drag promote specstride:live-eng-state:blocked-on-human: exit 1 
+drag schedule specstride:live-eng-state:blocked-on-human: exit 1 cannot schedule t_e32d9279
+drag schedule specstride:live-eng-state:finished: exit 1 cannot schedule t_706e6d6d
+drag promote specstride:live-eng-state:finished: exit 1 
+drag schedule specstride:live-eng-state:finished: exit 1 cannot schedule t_706e6d6d
+drag promote specstride:live-eng-state:finished: exit 1 
+drag schedule specstride:live-eng-state:finished: exit 1 cannot schedule t_706e6d6d
+drag schedule specstride:live-eng-state:stopped: exit 1 cannot schedule t_376f755b
+drag promote specstride:live-eng-state:stopped: exit 1 
+drag schedule specstride:live-eng-state:stopped: exit 1 cannot schedule t_376f755b
+drag promote specstride:live-eng-state:stopped: exit 1 
+drag schedule specstride:live-eng-state:stopped: exit 1 cannot schedule t_376f755b
+drag schedule specstride:live-eng-state:failed: exit 1 cannot schedule t_2660b0a5
+drag promote specstride:live-eng-state:failed: exit 1 
+drag schedule specstride:live-eng-state:failed: exit 1 cannot schedule t_2660b0a5
+drag promote specstride:live-eng-state:failed: exit 1 
+drag schedule specstride:live-eng-state:failed: exit 1 cannot schedule t_2660b0a5
+drag schedule specstride:live-rdr:queued: exit 1 cannot schedule t_8fe79a48
+drag promote specstride:live-rdr:queued: exit 1 
+drag schedule specstride:live-rdr:queued: exit 1 cannot schedule t_8fe79a48
+drag promote specstride:live-rdr:queued: exit 1 
+drag schedule specstride:live-rdr:queued: exit 1 cannot schedule t_8fe79a48
+drag schedule specstride:live-rdr:proposing: exit 1 cannot schedule t_fe868738
+drag promote specstride:live-rdr:proposing: exit 1 
+drag schedule specstride:live-rdr:proposing: exit 1 cannot schedule t_fe868738
+drag promote specstride:live-rdr:proposing: exit 1 
+drag schedule specstride:live-rdr:proposing: exit 1 cannot schedule t_fe868738
+drag schedule specstride:live-rdr:verifying: exit 1 cannot schedule t_9cc687b2
+drag promote specstride:live-rdr:verifying: exit 1 
+drag schedule specstride:live-rdr:verifying: exit 1 cannot schedule t_9cc687b2
+drag promote specstride:live-rdr:verifying: exit 1 
+drag schedule specstride:live-rdr:verifying: exit 1 cannot schedule t_9cc687b2
+drag schedule specstride:live-rdr:reviewing: exit 1 cannot schedule t_d83edbc1
+drag promote specstride:live-rdr:reviewing: exit 1 
+drag schedule specstride:live-rdr:reviewing: exit 1 cannot schedule t_d83edbc1
+drag promote specstride:live-rdr:reviewing: exit 1 
+drag schedule specstride:live-rdr:reviewing: exit 1 cannot schedule t_d83edbc1
+drag schedule specstride:live-rdr:approved: exit 1 cannot schedule t_027a9b4f
+drag promote specstride:live-rdr:approved: exit 1 
+drag schedule specstride:live-rdr:approved: exit 1 cannot schedule t_027a9b4f
+drag promote specstride:live-rdr:approved: exit 1 
+drag schedule specstride:live-rdr:approved: exit 1 cannot schedule t_027a9b4f
+drag schedule specstride:live-rdr:blocked: exit 1 cannot schedule t_3745fa68
+drag promote specstride:live-rdr:blocked: exit 1 
+drag schedule specstride:live-rdr:blocked: exit 1 cannot schedule t_3745fa68
+drag promote specstride:live-rdr:blocked: exit 1 
+drag schedule specstride:live-rdr:blocked: exit 1 cannot schedule t_3745fa68
+drag schedule specstride:live-rdr:paused: exit 1 cannot schedule t_ee95c39a
+drag promote specstride:live-rdr:paused: exit 1 
+drag schedule specstride:live-rdr:paused: exit 1 cannot schedule t_ee95c39a
+drag promote specstride:live-rdr:paused: exit 1 
+drag schedule specstride:live-rdr:paused: exit 1 cannot schedule t_ee95c39a
+drag schedule specstride:live-rdr:failed: exit 1 cannot schedule t_9453a751
+drag promote specstride:live-rdr:failed: exit 1 
+drag schedule specstride:live-rdr:failed: exit 1 cannot schedule t_9453a751
+drag promote specstride:live-rdr:failed: exit 1 
+drag schedule specstride:live-rdr:failed: exit 1 cannot schedule t_9453a751
+variant default: 100/100 dispatch ticks exited 0
+diagnostics (default): exit 0
+variant default-assignee: kanban.default_assignee=hermes
+variant default-assignee: 100/100 dispatch ticks exited 0
+diagnostics (default-assignee): exit 0
+variant auto-decompose: kanban.auto_decompose=true
+variant auto-decompose: 100/100 dispatch ticks exited 0
+diagnostics (auto-decompose): exit 0
+no task_runs row and no claimed/spawned/assigned/decomposed event on any projected card
+U-151-02: create --assignee specstride-projection accepted; show assignee: specstride-projection
+U-151-08: created cards land in status ready (hermes kanban create → status field)
+host fact (read 2026-11-13): `hermes kanban create` takes its title as a positional argument and rejects `--title` (`unrecognized arguments: --title`); the projection contract's `--title` form must move to the positional form when 150/151 next touches the argv builder (recorded for the U-table)
+dispatcher-test.json written for hermes 0.22.2

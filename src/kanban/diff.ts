@@ -46,6 +46,10 @@ export interface ActualCard {
   key: string;
   hermesId: string;
   column: string;
+  /** The assignee the board reports; absent when `show` did not carry one. */
+  assignee?: string;
+  /** The tenant the board reports; absent when `show` did not carry one. */
+  tenant?: string;
 }
 
 /** The stable change signature over the wanted set (F151-FR-040). */
@@ -102,8 +106,15 @@ export function planVerbs(inputs: PlanInputs): PlannedVerb[] {
       continue;
     }
     const actual = inputs.actual?.get(card.key);
-    if (actual !== undefined && actual.column !== card.column) {
-      // a foreign column move is restored within the cycle (≤ 60 s)
+    // A foreign column move OR a foreign assignee/tenant (guard A) is
+    // restored within the cycle (≤ 60 s): one `schedule` of the known id,
+    // whose argv carries the guard surface again (F151-FR-010, F151-FR-027).
+    const foreignColumn = actual !== undefined && actual.column !== card.column;
+    const foreignGuards =
+      actual !== undefined &&
+      ((actual.assignee !== undefined && actual.assignee !== card.assignee) ||
+        (actual.tenant !== undefined && actual.tenant !== card.tenant));
+    if (foreignColumn || foreignGuards) {
       verbs.push({ verb: "schedule", key: card.key, id: actual.hermesId, card, result: null });
     }
     if (stored.column !== "done" && card.column === "done") {

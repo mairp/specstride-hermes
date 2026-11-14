@@ -46,7 +46,10 @@ const FORBIDDEN = [
 ];
 
 const HEAD = ["hermes", "-p", "specstride", "kanban"];
-const SURFACE = (key: string) => [
+// Host facts (read 2026-11-13/14, `hermes kanban <verb> --help`, Hermes
+// 0.22.2): only `create` accepts the guard flags; each verb's tail below is
+// exactly what the real CLI parses.
+const CREATE_TAIL = (key: string) => [
   "--tenant",
   "specstride",
   "--assignee",
@@ -62,8 +65,15 @@ const SURFACE = (key: string) => [
 
 test("the module exports exactly the ten allowed verb functions and nothing else", () => {
   const names = Object.keys(kanban).sort();
-  assert.deepEqual(names, [...ALLOWED].map((verb) => `kanban${verb[0].toUpperCase()}${verb.slice(1)}`).sort());
+  // The two guard exports of T043 (the pre-spawn assertion and its values)
+  // are not verb functions; everything else is exactly the ten verbs.
+  const guards = ["WRITE_GUARDS", "assertWriteGuards"];
+  assert.deepEqual(
+    names,
+    [...ALLOWED.map((verb) => `kanban${verb[0].toUpperCase()}${verb.slice(1)}`), ...guards].sort(),
+  );
   for (const name of names) {
+    if (guards.includes(name)) continue;
     assert.equal(typeof (kanban as Record<string, unknown>)[name], "function", name);
   }
 });
@@ -96,36 +106,19 @@ test("create builds the exact argv and carries the body on stdin", () => {
   assert.deepEqual(call.argv, [
     ...HEAD,
     "create",
-    "--title",
     "[running] alpha · r-1",
-    ...SURFACE("specstride:r-1"),
+    ...CREATE_TAIL("specstride:r-1"),
   ]);
   assert.equal(call.stdin, "engine-state: running\n");
 });
 
 test("show, list, schedule, archive and promote build their exact argv", () => {
   const key = "specstride:r-1:p2";
-  const tail = SURFACE(key);
-  assert.deepEqual(kanban.kanbanShow({ key, id: "h-7" }).argv, [...HEAD, "show", "h-7", ...tail]);
-  assert.deepEqual(kanban.kanbanList({ key }).argv, [...HEAD, "list", ...tail]);
-  assert.deepEqual(kanban.kanbanSchedule({ key, id: "h-7" }).argv, [
-    ...HEAD,
-    "schedule",
-    "h-7",
-    ...tail,
-  ]);
-  assert.deepEqual(kanban.kanbanArchive({ key, id: "h-7" }).argv, [
-    ...HEAD,
-    "archive",
-    "h-7",
-    ...tail,
-  ]);
-  assert.deepEqual(kanban.kanbanPromote({ key, id: "h-9" }).argv, [
-    ...HEAD,
-    "promote",
-    "h-9",
-    ...tail,
-  ]);
+  assert.deepEqual(kanban.kanbanShow({ key, id: "h-7" }).argv, [...HEAD, "show", "h-7", "--json"]);
+  assert.deepEqual(kanban.kanbanList({ key }).argv, [...HEAD, "list", "--tenant", "specstride", "--json"]);
+  assert.deepEqual(kanban.kanbanSchedule({ key, id: "h-7" }).argv, [...HEAD, "schedule", "h-7"]);
+  assert.deepEqual(kanban.kanbanArchive({ key, id: "h-7" }).argv, [...HEAD, "archive", "h-7"]);
+  assert.deepEqual(kanban.kanbanPromote({ key, id: "h-9" }).argv, [...HEAD, "promote", "h-9", "--json"]);
   for (const call of [
     kanban.kanbanShow({ key, id: "h-7" }),
     kanban.kanbanList({ key }),
@@ -151,9 +144,10 @@ test("edit builds its exact argv with the body on stdin", () => {
     "h-7",
     "--title",
     "[proposing] alpha phase 2 · p2",
-    ...SURFACE(key),
+    "--body",
+    "engine-lane: proposing\n",
   ]);
-  assert.equal(call.stdin, "engine-lane: proposing\n");
+  assert.equal(call.stdin, "");
 });
 
 test("complete carries --result with the engine value", () => {
@@ -165,7 +159,6 @@ test("complete carries --result with the engine value", () => {
     "h-7",
     "--result",
     "approved (engine)",
-    ...SURFACE(key),
   ]);
 });
 
@@ -183,8 +176,8 @@ test("block carries --kind needs_input and the verbatim text", () => {
     "--kind",
     "needs_input",
     "alpha: run ended failed in phase 2 (scope) — the critic refused",
-    ...SURFACE(key),
   ]);
+  assert.equal(call.stdin, "");
 });
 
 test("comment carries the text and the common surface", () => {
@@ -195,15 +188,14 @@ test("comment carries the text and the common surface", () => {
     "comment",
     "h-7",
     "archived: the run was replaced",
-    ...SURFACE(key),
   ]);
-  assert.equal(call.stdin, "archived: the run was replaced");
+  assert.equal(call.stdin, "");
 });
 
-test("the common surface sits on every call, always last, always complete", () => {
+test("every verb's tail is exactly what Hermes 0.22.2 parses (no create-only flag elsewhere)", () => {
   const calls = [
     kanban.kanbanCreate({ key: "k", title: "t", body: "b" }),
-    kanban.kanbanShow({ key: "k" }),
+    kanban.kanbanShow({ key: "k", id: "i" }),
     kanban.kanbanList({ key: "k" }),
     kanban.kanbanSchedule({ key: "k", id: "i" }),
     kanban.kanbanEdit({ key: "k", id: "i", title: "t", body: "b" }),
@@ -216,19 +208,27 @@ test("the common surface sits on every call, always last, always complete", () =
   for (const call of calls) {
     assert.equal(call.argv[0], "hermes");
     assert.deepEqual(call.argv.slice(1, 4), ["-p", "specstride", "kanban"]);
-    const idx = call.argv.indexOf("--tenant");
-    assert.deepEqual(
-      call.argv.slice(idx),
-      SURFACE("k"),
-      `surface of ${call.argv[4]}`,
-    );
   }
+  // The guard flags exist ONLY on create (host facts above); every other
+  // verb carries none of them — except `list`, which accepts --tenant — so
+  // the real CLI never answers "unrecognized arguments" to a projected call.
+  for (const call of calls.slice(1)) {
+    for (const flag of ["--assignee", "--idempotency-key", "--workspace", "--body-file"]) {
+      assert.ok(!call.argv.includes(flag), `${flag} on ${call.argv[4]}`);
+    }
+    if (call.argv[4] !== "list") assert.ok(!call.argv.includes("--tenant"), `--tenant on ${call.argv[4]}`);
+  }
+  // Reads and column moves stay inside their recorded flag set.
+  assert.deepEqual(kanban.kanbanShow({ key: "k", id: "i" }).argv.slice(5), ["i", "--json"]);
+  assert.deepEqual(kanban.kanbanPromote({ key: "k", id: "i" }).argv.slice(5), ["i", "--json"]);
+  assert.deepEqual(kanban.kanbanSchedule({ key: "k", id: "i" }).argv.slice(5), ["i"]);
+  assert.deepEqual(kanban.kanbanArchive({ key: "k", id: "i" }).argv.slice(5), ["i"]);
 });
 
 test("every argv starts `hermes -p specstride kanban <verb>` in that order", () => {
   const verbs = [
     kanban.kanbanCreate({ key: "k", title: "t", body: "b" }).argv[4],
-    kanban.kanbanShow({ key: "k" }).argv[4],
+    kanban.kanbanShow({ key: "k", id: "i" }).argv[4],
     kanban.kanbanList({ key: "k" }).argv[4],
     kanban.kanbanSchedule({ key: "k", id: "i" }).argv[4],
     kanban.kanbanEdit({ key: "k", id: "i", title: "t", body: "b" }).argv[4],
