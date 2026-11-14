@@ -1,0 +1,2 @@
+{"seq":1,"schema":"specstride.event/1","type":"run.started","feature":"151-nolaunch","launchId":"launch-manual","at":"2026-11-11T08:00:00.000Z"}
+{"seq":2,"schema":"specstride.event/1","type":"phase.started","feature":"151-nolaunch","launchId":"launch-manual","phase":1,"at":"2026-11-11T08:00:30.000Z"}

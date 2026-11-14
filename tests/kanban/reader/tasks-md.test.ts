@@ -6,17 +6,19 @@
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parsePhases, parseScopes } from "../../../src/kanban/reader/tasks-md.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..", "..");
-const TASKS_150 = readFileSync(join(ROOT, "specs", "150-host-hermes", "tasks.md"), "utf8");
+// specs/ stays local since the split: a public clone has no 150 tasks.md to parse.
+const TASKS_150_PATH = join(ROOT, "specs", "150-host-hermes", "tasks.md");
+const NO_SPECS = existsSync(TASKS_150_PATH) ? false : "no specs/ in this clone (public split)";
 
-test("this repository's specs/150-host-hermes/tasks.md parses to 10 phases", () => {
-  const phases = parsePhases(TASKS_150);
+test("this repository's specs/150-host-hermes/tasks.md parses to 10 phases", { skip: NO_SPECS }, () => {
+  const phases = parsePhases(readFileSync(TASKS_150_PATH, "utf8"));
   assert.equal(phases.length, 10);
   assert.equal(phases[0].number, 1);
   assert.equal(phases[0].title, "Setup");
@@ -101,8 +103,10 @@ test("a bracket that is not a tag ends the tag run, and ticks are read", () => {
   assert.deepEqual(scopes.parallel[0].files, ["a.ts"]);
 });
 
-test("this repository's own 151 tasks.md parses with story scopes", () => {
-  const tasks151 = readFileSync(join(ROOT, "specs", "151-hermes-kanban", "tasks.md"), "utf8");
+const TASKS_151_PATH = join(ROOT, "specs", "151-hermes-kanban", "tasks.md");
+
+test("this repository's own 151 tasks.md parses with story scopes", { skip: existsSync(TASKS_151_PATH) ? false : "no specs/ in this clone (public split)" }, () => {
+  const tasks151 = readFileSync(TASKS_151_PATH, "utf8");
   const scopes = parseScopes(tasks151);
   assert.ok(scopes.phases.length >= 10);
   assert.ok(scopes.stories["US7"].length > 0, "US7 exists in 151's tasks.md");

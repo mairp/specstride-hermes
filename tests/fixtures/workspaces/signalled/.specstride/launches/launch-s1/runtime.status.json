@@ -1,0 +1,9 @@
+{
+  "schema": "specstride.runtime-status/1",
+  "launchId": "launch-s1",
+  "state": "signalled",
+  "pid": 4220,
+  "signal": "SIGTERM",
+  "exitSignal": 15,
+  "recordedAt": "2026-11-11T09:00:00.000Z"
+}

@@ -868,9 +868,13 @@ export async function dispatch(c: CaseInput): Promise<unknown> {
         MIRROR_SETS.find((s) => s.feature === `${campaign}-hermes-kanban`) ??
         MIRROR_SETS.find((s) => s.feature === `${campaign}-host-hermes`);
       const files = set?.files ?? [];
+      // A public clone has no specs/ (local since the split): there the tracked
+      // mirror is what ships, so it must be complete; the byte check needs the source.
+      const hasSource = set !== undefined && existsSync(join(ROOT, "specs", set.feature, "contracts"));
       const byteEqual = files.every((f) => {
         const a = join(ROOT, "specs", set!.feature, "contracts", f);
         const b = join(ROOT, "contracts", set!.feature, f);
+        if (!hasSource) return existsSync(b);
         if (!existsSync(a) || !existsSync(b)) return false;
         return readFileSync(a).equals(readFileSync(b));
       });
@@ -974,6 +978,12 @@ for (const [n, slug, build] of BUILDS) {
     }
     assert.deepEqual(failures, [], `phase ${n} failures:\n${failures.join("\n")}`);
 
+    // The FR coverage reads the spec, which stays local since the split: a
+    // public clone runs every case above and skips only this cross-check.
+    if (!existsSync(SPEC_TASKS)) {
+      t.diagnostic(`phase ${String(n).padStart(2, "0")} (${slug}): ${String(cases.length)} cases; FR coverage skipped (no specs/ in this clone)`);
+      return;
+    }
     const phases = parseSpecPhases(SPEC_TASKS);
     const mine = phases.find((p) => p.n === n);
     assert.ok(mine !== undefined, `tasks.md has no Phase ${n}`);

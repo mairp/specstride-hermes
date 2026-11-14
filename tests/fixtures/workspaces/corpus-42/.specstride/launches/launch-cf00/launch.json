@@ -1,0 +1,9 @@
+{
+  "schema": "specstride.launch/1",
+  "launchId": "launch-cf00",
+  "runId": "run-launch-cf00",
+  "workspaceId": "c0rpus42fix0000a1",
+  "feature": "corpus-f00",
+  "createdAt": "2026-11-11T09:00:00.000Z",
+  "outcome": "started"
+}

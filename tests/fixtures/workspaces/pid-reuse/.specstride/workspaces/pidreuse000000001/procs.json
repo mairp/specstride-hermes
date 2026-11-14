@@ -1,0 +1,13 @@
+{
+  "schema": "specstride.procs/1",
+  "recordedAt": "2026-11-11T09:00:00.000Z",
+  "processes": [
+    {
+      "pid": 4212,
+      "feature": "151-reuse",
+      "launchId": "launch-p1",
+      "starttime": 9000000,
+      "recordedStarttime": 4200000
+    }
+  ]
+}

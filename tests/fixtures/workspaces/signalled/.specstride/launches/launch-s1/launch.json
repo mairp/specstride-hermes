@@ -1,0 +1,9 @@
+{
+  "schema": "specstride.launch/1",
+  "launchId": "launch-s1",
+  "runId": "run-launch-s1",
+  "workspaceId": "signalled00000001",
+  "feature": "151-signal",
+  "createdAt": "2026-11-11T09:00:00.000Z",
+  "outcome": "signalled"
+}

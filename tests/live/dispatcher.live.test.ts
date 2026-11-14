@@ -120,7 +120,8 @@ test("live dispatcher lane: no projected card is ever claimed, spawned, assigned
     }
     context.push(`pm repair: exit ${repaired.status}`);
     assert.equal(repaired.status, 0, repaired.stderr);
-    const profile = hermes(home, ["profile", "create", "specstride"], 600_000);
+    // --no-alias: HERMES_HOME redirects the profile, not the wrapper script.
+    const profile = hermes(home, ["profile", "create", "--no-alias", "specstride"], 600_000);
     context.push(`profile create specstride: exit ${profile.status}`);
     assert.equal(profile.status, 0, profile.stderr);
 

@@ -1,0 +1,8 @@
+{
+  "schema": "specstride.lease/1",
+  "feature": "151-relaunch",
+  "launchId": "launch-r1",
+  "pid": 4200,
+  "starttime": 4200000,
+  "acquiredAt": "2026-11-11T09:00:00.000Z"
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "specstride.procs/1",
+  "recordedAt": "2026-11-11T09:00:00.000Z",
+  "processes": [
+    {
+      "pid": 4240,
+      "feature": "151-voided",
+      "launchId": "launch-w1",
+      "starttime": 4200000
+    }
+  ]
+}

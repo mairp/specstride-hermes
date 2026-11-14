@@ -1,0 +1,7 @@
+{
+  "schema": "specstride.runtime-status/1",
+  "launchId": "launch-w1",
+  "state": "running",
+  "pid": 4240,
+  "recordedAt": "2026-11-11T09:00:00.000Z"
+}

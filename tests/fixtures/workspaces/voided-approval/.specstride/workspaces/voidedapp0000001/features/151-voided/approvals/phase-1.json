@@ -1,0 +1,9 @@
+{
+  "schema": "specstride.approval/1",
+  "feature": "151-voided",
+  "phase": 1,
+  "outcome": "approved",
+  "voided": true,
+  "voidedAt": "2026-11-11T09:00:00.000Z",
+  "recordedAt": "2026-11-11T09:00:00.000Z"
+}

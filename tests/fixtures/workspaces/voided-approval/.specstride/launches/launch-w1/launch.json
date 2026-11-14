@@ -1,0 +1,9 @@
+{
+  "schema": "specstride.launch/1",
+  "launchId": "launch-w1",
+  "runId": "run-launch-w1",
+  "workspaceId": "voidedapp0000001",
+  "feature": "151-voided",
+  "createdAt": "2026-11-11T07:55:00.000Z",
+  "outcome": "started"
+}

@@ -1,0 +1,21 @@
+{
+  "contract_hash": "f5f4a05c4b490c8e87f779478aec092c98a5fd4945f9fe280939bcf1db423a5e",
+  "exit_reason": "all-stages-complete",
+  "last_stage": "run-150-host-hermes",
+  "pipeline": "150-host-hermes",
+  "stages": {
+    "run-150-host-hermes": {
+      "child_exit_code": 0,
+      "evidence": null,
+      "finished_at": 1794297441430,
+      "reason": "completed",
+      "started_at": 1794297440610,
+      "status": "completed"
+    }
+  },
+  "state": "completed",
+  "superseded_contract_digest": null,
+  "updated_at": 1794297441432,
+  "feature": "150-host-hermes",
+  "launchId": "launch-mwaed8w3"
+}

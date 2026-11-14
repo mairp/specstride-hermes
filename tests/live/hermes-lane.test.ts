@@ -42,12 +42,20 @@ const version = hermesVersion();
  * No install, no Hermes command and no probe file happen in the skipped case —
  * the test body never runs.
  */
+// T079: the per-change runner (`npm test`) sets SPECSTRIDE_PER_CHANGE=1 and this
+// lane answers `skipped` there, like the other live lanes; it runs for real only
+// with `npm run test:live`.
+const PER_CHANGE_SKIP =
+  process.env.SPECSTRIDE_PER_CHANGE === "1"
+    ? "per-change run (npm test): run this lane explicitly with npm run test:live"
+    : undefined;
 const SKIP_REASON =
-  version === null
+  PER_CHANGE_SKIP ??
+  (version === null
     ? "hermes is not on PATH"
     : version.version !== PINNED_VERSION
       ? `unpinned hermes version ${version.version} != ${PINNED_VERSION}`
-      : undefined;
+      : undefined);
 
 /** Run one Hermes command with the temporary home, capturing everything. */
 function hermes(home: string, argv: readonly string[], timeoutMs = 120_000) {
@@ -101,7 +109,9 @@ test("live hermes lane", { skip: SKIP_REASON }, (t) => {
       // HF-PLUGINS-LIST / HF-PLUGINS-DISABLE in the temporary profile. A
       // profile must exist first (`hermes profile create`, recorded as the
       // settling step of the profile commands).
-      const create = hermes(home, ["profile", "create", profile]);
+      // --no-alias: HERMES_HOME redirects the profile, not the wrapper script,
+      // which would otherwise land in the real ~/.local/bin.
+      const create = hermes(home, ["profile", "create", "--no-alias", profile]);
       context.steps.push(
         `hermes profile create ${profile}: exit ${create.status}\n${(create.stdout ?? "") + (create.stderr ?? "")}`.trim(),
       );
