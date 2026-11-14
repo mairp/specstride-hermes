@@ -8,3 +8,17 @@ pull_request_rules:
     actions:
       merge:
         method: merge
+
+  # Automerge for the operator's PRs: this mirror is single-operator and
+  # its Actions produce no runs, so a check-gated rule would stall every
+  # PR forever. Any non-draft PR to main from the owner merges on sight;
+  # drafts never merge and merge conflicts block. If CI is enabled later,
+  # the feature-150 rule above is the green-gate path.
+  - name: automerge the operator's PRs to main
+    conditions:
+      - "author=mairp"
+      - "base=main"
+      - "-draft"
+    actions:
+      merge:
+        method: merge
