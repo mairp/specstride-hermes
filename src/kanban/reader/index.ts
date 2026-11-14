@@ -43,6 +43,7 @@ import {
 } from "./runs.ts";
 import { type EndInfo, type LaunchRecord, endOf, launchOfRun, pipelineEnd, readLaunches } from "./launches.ts";
 import { type AttentionItem, type LanePhase, type ReaderCard, attentionOf, featureCards } from "./lanes.ts";
+import { buildDetails, type FeatureDetail, type PhaseDetail } from "./detail.ts";
 
 export { type FilePort, type ProcPort } from "./ports.ts";
 
@@ -57,7 +58,7 @@ export interface ReaderView {
   attention: AttentionItem[];
   budget: [];
   phases: [];
-  featureDetails: Record<string, { run: { id: string; launch: string | null; state: string | null; phase: number | null; startedAt: string | null; lastAt: string | null } }>;
+  featureDetails: Record<string, { run: { id: string; launch: string | null; state: string | null; phase: number | null; startedAt: string | null; lastAt: string | null } } & Omit<FeatureDetail, "run" | "detail"> & { detail: PhaseDetail | null }>;
   cursor: { offset: number; lastSeq: number };
   signature: { token: string };
 }
@@ -163,6 +164,36 @@ export function readWorkspaceView(workspace: string, options: WorkspaceReaderOpt
 
     const ctx = { chosenRun: chosen, facts, end, approvals: approvalPhases(fs, root, feature), gates: gatePhases(fs, workspace, feature), nowMs };
     const featureCardsOut = featureCards(feature, phases, ctx);
+    // The card detail (US6): additive — a builder that cannot read leaves
+    // every card of the feature without one, never fails the view.
+    const details = (() => {
+      try {
+        return buildDetails({
+          fs,
+          proc,
+          workspace,
+          root,
+          home: options.home,
+          feature,
+          scope,
+          runs,
+          chosen,
+          launches,
+          launch,
+          registry,
+          nowMs,
+        });
+      } catch {
+        return null;
+      }
+    })();
+    if (details !== null) {
+      for (const card of featureCardsOut) {
+        const match = /^.+#(\d+)$/.exec(card.id);
+        const phaseNumber = match === null ? null : Number(match[1]);
+        card.detail = phaseNumber === null ? null : (details.phases.get(phaseNumber) ?? null);
+      }
+    }
     cards.push(...featureCardsOut);
     const item = attentionOf(feature, featureCardsOut, ctx);
     if (item !== null) attention.push(item);
@@ -173,6 +204,8 @@ export function readWorkspaceView(workspace: string, options: WorkspaceReaderOpt
         : facts.activity !== null
           ? "running"
           : "between passes";
+      const built = details === null ? null : details.feature;
+      const currentDetail = details === null || facts.currentPhase === null ? null : (details.phases.get(facts.currentPhase) ?? null);
       featureDetails[feature] = {
         run: {
           id: chosen.runId.length > 40 ? chosen.runId.slice(0, 40) : chosen.runId,
@@ -182,6 +215,15 @@ export function readWorkspaceView(workspace: string, options: WorkspaceReaderOpt
           startedAt: chosen.firstAt,
           lastAt: chosen.lastAt,
         },
+        agents: built?.agents ?? [],
+        agentsNote: built?.agentsNote ?? null,
+        launches: built?.launches ?? [],
+        launchesOmitted: built?.launchesOmitted ?? 0,
+        usage: built?.usage ?? null,
+        cost: "not reported",
+        limits: "quota: not reported",
+        usageNote: built?.usageNote ?? null,
+        detail: currentDetail,
       };
       if (!end.ended && (facts.activity !== null || isRunAlive(proc, chosen))) anyLive = true;
     }

@@ -20,6 +20,7 @@
 import type { BoardModel } from "./board-model.ts";
 import { el, type ElementNode } from "./tree.ts";
 import { ATTENTION_SET, BUDGET_SET, badge, laneOf } from "./presentation.ts";
+import { inspectorOf } from "./detail-tree.ts";
 
 function asRecordTree(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {};
@@ -41,12 +42,14 @@ function phaseTitles(board: BoardModel): Map<number, string> {
 /** One card of a lane column: the phase token and the title span when the
  * card's phase carries a title, the full line in the title attribute. A card
  * whose phase has no title renders no `data-card-part` anywhere. */
-function cardNode(card: Record<string, unknown>, titles: ReadonlyMap<number, string>): ElementNode {
+function cardNode(card: Record<string, unknown>, titles: ReadonlyMap<number, string>, selection: string | null = null): ElementNode {
   const id = typeof card.id === "string" ? card.id : "?";
   const phase = typeof card.phase === "number" ? card.phase : null;
   const ownTitle = typeof card.title === "string" ? card.title : null;
   const phaseTitle = phase !== null ? (titles.get(phase) ?? null) : null;
   const title = ownTitle ?? phaseTitle;
+  const hasDetail = typeof card.detail === "object" && card.detail !== null;
+  const selected = selection !== null && selection === id;
   const children: (ElementNode | string)[] = [];
   if (phase !== null && title !== null) {
     children.push(el("span", { class: "sskh-phase", "data-card-part": "phase" }, `phase ${String(phase)}`));
@@ -67,7 +70,14 @@ function cardNode(card: Record<string, unknown>, titles: ReadonlyMap<number, str
     {
       class: "sskh-card",
       "data-card-id": id,
+      "data-kanban-card-id": id,
       "data-tint": typeof card.lane === "string" ? card.lane : "?",
+      // A card that carries a detail is a toggle button (F151-FR-047); one
+      // without stays a plain div.
+      role: hasDetail ? "button" : undefined,
+      tabindex: hasDetail ? "0" : undefined,
+      "aria-pressed": hasDetail ? (selected ? "true" : "false") : undefined,
+      "data-has-detail": hasDetail ? "true" : undefined,
     },
     ...children,
   );
@@ -81,6 +91,7 @@ function laneColumn(
   lane: BoardModel["lanes"][number],
   titles: ReadonlyMap<number, string>,
   boardHasCards: boolean,
+  selection: string | null,
 ): ElementNode {
   const name = String(lane.lane);
   const p = laneOf(name);
@@ -107,7 +118,7 @@ function laneColumn(
       ),
       ` ${String(lane.cards.length)}`,
     ),
-    ...lane.cards.map((card) => cardNode(card, titles)),
+    ...lane.cards.map((card) => cardNode(card, titles, selection)),
   );
 }
 
@@ -200,13 +211,22 @@ export function boardTreeOf(board: BoardModel): ElementNode {
   const lanesContainer = el(
     "div",
     { class: "sskh-lanes", "data-lanes": "" },
-    ...board.lanes.map((lane) => laneColumn(lane, titles, boardHasCards)),
+    ...board.lanes.map((lane) => laneColumn(lane, titles, boardHasCards, board.selectedCardId)),
   );
-  const inspector = el(
-    "aside",
-    { class: "sskh-inspector", "data-inspector": "" },
-    "select a card to see its detail",
-  );
+  // The inspector: the selected card's detail (the five sections of the
+  // detail contract), else the placeholder (F151-FR-043, F151-FR-047).
+  const inspector =
+    board.selectedCard !== null && board.detail !== null && board.selectedCardId !== null
+      ? inspectorOf({
+          card: board.selectedCard,
+          detail: board.detail,
+          featureDetail: board.featureDetail ?? {},
+        })
+      : el(
+          "aside",
+          { class: "sskh-inspector", "data-inspector": "" },
+          "select a card to see its detail",
+        );
   const children: (ElementNode | string | null)[] = [
     ...board.banners,
     isReader

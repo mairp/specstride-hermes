@@ -54,6 +54,8 @@ export interface ReaderCard {
   title: string;
   ruleId: string;
   flags: { dead: false; stale: boolean; yielded: boolean };
+  /** The phase's detail (US6); additive — a card may carry none. */
+  detail?: import("./detail.ts").PhaseDetail | null;
 }
 
 /** The inputs one feature's lane decision reads. */

@@ -23,7 +23,7 @@ interface TabWindow {
 
 /** Render the board tree of one view through the adapter. */
 export function renderBoard(view: unknown, adapt: (node: VNode) => unknown): unknown {
-  const board = boardOf(view, new Set());
+  const board = boardOf(view, null);
   return adapt(boardTreeOf(board));
 }
 

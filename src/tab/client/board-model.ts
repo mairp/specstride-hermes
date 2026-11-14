@@ -107,12 +107,49 @@ function stripOf(
   return el("div", { class: "sskh-strip", "data-summary": "" }, ...children);
 }
 
+/** One lane column of the board: the lane key and its cards. */
+export interface BoardLane {
+  lane: string;
+  cards: readonly Record<string, unknown>[];
+  empty: boolean;
+}
+
+/** One feature row of the strip. */
+export interface BoardFeature {
+  name: string;
+  cards: readonly Record<string, unknown>[];
+  approved: number;
+  run: Record<string, unknown> | null;
+}
+
+/** The board model of one view and selection. */
+export interface BoardModel {
+  view: AcceptedView;
+  banners: readonly ElementNode[];
+  viewSource: string;
+  marker: string | null;
+  lanes: readonly BoardLane[];
+  features: readonly BoardFeature[];
+  attention: readonly unknown[];
+  budget: readonly unknown[];
+  approvals: readonly unknown[];
+  windowed: boolean;
+  strip: ElementNode | null;
+  /** The selected card id, or `null`. */
+  selectedCardId: string | null;
+  /** The selected card, or `null`. */
+  selectedCard: Record<string, unknown> | null;
+  /** The selected card's detail (`cards[].detail`), or `null`. */
+  detail: Record<string, unknown> | null;
+  /** The selected feature's detail (`featureDetails[<feature>]`), or `null`. */
+  featureDetail: Record<string, unknown> | null;
+}
+
 /**
  * The board of one accepted view and the selected card id (or `null`).
  * Pure: no clock, no randomness, no I/O.
  */
 export function boardOf(view: AcceptedView, selection: string | null): BoardModel {
-  void selection;
   const raw = asRecord(view.view);
   const cards = asList(raw.cards);
 
@@ -160,6 +197,15 @@ export function boardOf(view: AcceptedView, selection: string | null): BoardMode
     ),
   ];
 
+  // The selection: the chosen card carries its own detail (F151-FR-043) and
+  // the feature's detail sits beside it; client state only, no fetch.
+  const selectedCard = selection === null ? null : (cards.find((card) => card.id === selection) ?? null);
+  const detail = selectedCard !== null && asRecord(selectedCard.detail) !== null && Object.keys(asRecord(selectedCard.detail)).length > 0 ? asRecord(selectedCard.detail) : null;
+  const featureName = selectedCard !== null && typeof selectedCard.feature === "string" ? selectedCard.feature : null;
+  const featureDetails = asRecord(raw.featureDetails);
+  const featureDetail =
+    featureName !== null && Object.keys(asRecord(featureDetails[featureName])).length > 0 ? asRecord(featureDetails[featureName]) : null;
+
   return {
     view,
     banners,
@@ -172,5 +218,9 @@ export function boardOf(view: AcceptedView, selection: string | null): BoardMode
     approvals: Array.isArray(raw.phases) ? (raw.phases as unknown[]) : [],
     windowed,
     strip: windowed ? null : stripOf(stripRows.rows, laneCounts, boardHasCards, stripRows.more),
+    selectedCardId: selectedCard !== null && typeof selectedCard.id === "string" ? selectedCard.id : null,
+    selectedCard,
+    detail,
+    featureDetail,
   };
 }

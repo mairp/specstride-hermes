@@ -2422,12 +2422,49 @@ function stripOf(
   return el("div", { class: "sskh-strip", "data-summary": "" }, ...children);
 }
 
+/** One lane column of the board: the lane key and its cards. */
+                            
+               
+                                            
+                 
+ 
+
+/** One feature row of the strip. */
+                               
+               
+                                            
+                   
+                                      
+ 
+
+/** The board model of one view and selection. */
+                             
+                     
+                                  
+                     
+                        
+                              
+                                    
+                                
+                             
+                                
+                    
+                            
+                                         
+                                
+                                      
+                                               
+                                                                  
+                                         
+                                                                                
+                                                
+ 
+
 /**
  * The board of one accepted view and the selected card id (or `null`).
  * Pure: no clock, no randomness, no I/O.
  */
 function boardOf(view              , selection               )             {
-  void selection;
   const raw = asRecord(view.view);
   const cards = asList(raw.cards);
 
@@ -2475,6 +2512,15 @@ function boardOf(view              , selection               )             {
     ),
   ];
 
+  // The selection: the chosen card carries its own detail (F151-FR-043) and
+  // the feature's detail sits beside it; client state only, no fetch.
+  const selectedCard = selection === null ? null : (cards.find((card) => card.id === selection) ?? null);
+  const detail = selectedCard !== null && asRecord(selectedCard.detail) !== null && Object.keys(asRecord(selectedCard.detail)).length > 0 ? asRecord(selectedCard.detail) : null;
+  const featureName = selectedCard !== null && typeof selectedCard.feature === "string" ? selectedCard.feature : null;
+  const featureDetails = asRecord(raw.featureDetails);
+  const featureDetail =
+    featureName !== null && Object.keys(asRecord(featureDetails[featureName])).length > 0 ? asRecord(featureDetails[featureName]) : null;
+
   return {
     view,
     banners,
@@ -2487,6 +2533,10 @@ function boardOf(view              , selection               )             {
     approvals: Array.isArray(raw.phases) ? (raw.phases             ) : [],
     windowed,
     strip: windowed ? null : stripOf(stripRows.rows, laneCounts, boardHasCards, stripRows.more),
+    selectedCardId: selectedCard !== null && typeof selectedCard.id === "string" ? selectedCard.id : null,
+    selectedCard,
+    detail,
+    featureDetail,
   };
 }
 
@@ -2530,12 +2580,14 @@ function phaseTitles(board            )                      {
 /** One card of a lane column: the phase token and the title span when the
  * card's phase carries a title, the full line in the title attribute. A card
  * whose phase has no title renders no `data-card-part` anywhere. */
-function cardNode(card                         , titles                             )              {
+function cardNode(card                         , titles                             , selection                = null)              {
   const id = typeof card.id === "string" ? card.id : "?";
   const phase = typeof card.phase === "number" ? card.phase : null;
   const ownTitle = typeof card.title === "string" ? card.title : null;
   const phaseTitle = phase !== null ? (titles.get(phase) ?? null) : null;
   const title = ownTitle ?? phaseTitle;
+  const hasDetail = typeof card.detail === "object" && card.detail !== null;
+  const selected = selection !== null && selection === id;
   const children                           = [];
   if (phase !== null && title !== null) {
     children.push(el("span", { class: "sskh-phase", "data-card-part": "phase" }, `phase ${String(phase)}`));
@@ -2556,7 +2608,14 @@ function cardNode(card                         , titles                         
     {
       class: "sskh-card",
       "data-card-id": id,
+      "data-kanban-card-id": id,
       "data-tint": typeof card.lane === "string" ? card.lane : "?",
+      // A card that carries a detail is a toggle button (F151-FR-047); one
+      // without stays a plain div.
+      role: hasDetail ? "button" : undefined,
+      tabindex: hasDetail ? "0" : undefined,
+      "aria-pressed": hasDetail ? (selected ? "true" : "false") : undefined,
+      "data-has-detail": hasDetail ? "true" : undefined,
     },
     ...children,
   );
@@ -2570,6 +2629,7 @@ function laneColumn(
   lane                             ,
   titles                             ,
   boardHasCards         ,
+  selection               ,
 )              {
   const name = String(lane.lane);
   const p = laneOf(name);
@@ -2596,7 +2656,7 @@ function laneColumn(
       ),
       ` ${String(lane.cards.length)}`,
     ),
-    ...lane.cards.map((card) => cardNode(card, titles)),
+    ...lane.cards.map((card) => cardNode(card, titles, selection)),
   );
 }
 
@@ -2689,13 +2749,22 @@ function boardTreeOf(board            )              {
   const lanesContainer = el(
     "div",
     { class: "sskh-lanes", "data-lanes": "" },
-    ...board.lanes.map((lane) => laneColumn(lane, titles, boardHasCards)),
+    ...board.lanes.map((lane) => laneColumn(lane, titles, boardHasCards, board.selectedCardId)),
   );
-  const inspector = el(
-    "aside",
-    { class: "sskh-inspector", "data-inspector": "" },
-    "select a card to see its detail",
-  );
+  // The inspector: the selected card's detail (the five sections of the
+  // detail contract), else the placeholder (F151-FR-043, F151-FR-047).
+  const inspector =
+    board.selectedCard !== null && board.detail !== null && board.selectedCardId !== null
+      ? inspectorOf({
+          card: board.selectedCard,
+          detail: board.detail,
+          featureDetail: board.featureDetail ?? {},
+        })
+      : el(
+          "aside",
+          { class: "sskh-inspector", "data-inspector": "" },
+          "select a card to see its detail",
+        );
   const children                                  = [
     ...board.banners,
     isReader
@@ -2927,7 +2996,7 @@ function createPoller(deps            )         {
  * `window.__HERMES_PLUGIN_SDK__`).
  */
                                                     
-
+                                                              
 /** The `React`-like surface the adapter needs of the SDK (`sdk.React`). */
                             
                 
@@ -2957,6 +3026,67 @@ function reactAdapterOf(sdk                    )                           {
   return (node) => adaptTree(node, React);
 }
 
+/** An `ElementNode` with event props attached at adapter time (the pure tree
+ *  never carries functions). */
+                     
+              
+                                 
+                      
+ 
+
+/** Attach the inspector's event handlers to the wired nodes of the tree:
+ *  the detail buttons toggle, Escape and the close control clear. */
+function wire(node           , toggle                      , close            )       {
+  const id = node.attrs["data-kanban-card-id"];
+  if (typeof id === "string") {
+    node.attrs.onClick = () => toggle(id);
+    node.attrs.onKeyDown = (event                 ) => {
+      if (event.key === "Enter" || event.key === " ") toggle(id);
+    };
+  }
+  if (node.attrs["data-kanban-detail-close"] !== undefined) {
+    node.attrs.onClick = close;
+  }
+  if (node.attrs["data-kanban-detail"] !== undefined) {
+    node.attrs.onKeyDown = (event                 ) => {
+      if (event.key === "Escape") close();
+    };
+  }
+  for (const child of node.children) {
+    if (typeof child === "object" && child !== null && "attrs" in (child             )) {
+      wire(child             , toggle, close);
+    }
+  }
+}
+
+                                     
+                                                                             
+                          
+                                                                     
+                     
+ 
+
+/**
+ * The board component (T058, T070 — US4, US6): renders the board tree for
+ * `view` and the current selection. Opening or closing a detail is client
+ * state only — no fetch, no lane change (F151-FR-047). The detail button
+ * toggles (click, Enter, Space; a second activation closes), Escape and the
+ * close control clear the selection.
+ */
+function createBoardComponent(deps                    )                {
+  const React = deps.sdk.React                                                                                      ;
+  if (typeof React.useState !== "function") throw new TypeError("createBoardComponent: sdk.React.useState is required");
+  return () => {
+    const [selection, setSelection] = React.useState(null);
+    const board = boardOf(deps.view, selection                 );
+    const tree = boardTreeOf(board);
+    const toggle = (id        ) => setSelection(selection === id ? null : id);
+    const close = () => setSelection(null);
+    wire(tree                        , toggle, close);
+    return adaptTree(tree, React);
+  };
+}
+
 /**
  * The dashboard tab entry (T058; contracts/151-hermes-kanban/tab-manifest.md).
  *
@@ -2976,7 +3106,7 @@ function reactAdapterOf(sdk                    )                           {
 
 /** Render the board tree of one view through the adapter. */
 function renderBoard(view         , adapt                          )          {
-  const board = boardOf(view, new Set());
+  const board = boardOf(view, null);
   return adapt(boardTreeOf(board));
 }
 

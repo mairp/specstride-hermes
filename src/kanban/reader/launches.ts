@@ -38,6 +38,8 @@ export interface LaunchRecord {
   stopRequested: boolean;
   /** The recorded reason of the end, verbatim, or null. */
   why: string | null;
+  /** The run id the launch record names (US6 detail), or null. */
+  runId: string | null;
 }
 
 /** The end judgement (data-model.md EndInfo). */
@@ -76,6 +78,7 @@ function readLaunchRecord(file: { size(path: string): number; read(path: string)
     exitSignal: str(status?.exitSignal) ?? str(supervision?.exitSignal),
     stopRequested,
     why: str(launch?.why) ?? str(status?.reason) ?? str(supervision?.why),
+    runId: str(launch?.runId),
   };
 }
 
