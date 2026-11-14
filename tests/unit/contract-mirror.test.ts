@@ -8,7 +8,7 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { cpSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,6 +16,8 @@ import { MIRROR_SETS, mirrorContracts, trackedMirrorFiles } from "../../scripts/
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..", "..");
+// A public clone has no specs/ (local since the split): nothing to compare against.
+const NO_SPECS = existsSync(join(ROOT, "specs")) ? false : "no specs/ in this clone (public split)";
 
 function mirrorBytes(feature: string, name: string): Buffer {
   return readFileSync(join(ROOT, "contracts", feature, name));
@@ -25,7 +27,7 @@ function sourceBytes(feature: string, name: string): Buffer {
   return readFileSync(join(ROOT, "specs", feature, "contracts", name));
 }
 
-test("every contract of 151 mirrors its spec source byte for byte", () => {
+test("every contract of 151 mirrors its spec source byte for byte", { skip: NO_SPECS }, () => {
   const set = MIRROR_SETS.find((s) => s.feature === "151-hermes-kanban")!;
   assert.equal(set.files.length, 9, "151 mirrors its nine contract files");
   for (const name of set.files) {
@@ -38,7 +40,7 @@ test("every contract of 151 mirrors its spec source byte for byte", () => {
   }
 });
 
-test("the two amended contracts of 150 mirror their spec sources byte for byte", () => {
+test("the two amended contracts of 150 mirror their spec sources byte for byte", { skip: NO_SPECS }, () => {
   const set = MIRROR_SETS.find((s) => s.feature === "150-host-hermes")!;
   assert.deepEqual(set.files, ["doctor-output.md", "host-facts.md"], "150 mirrors the two contracts 151 amended");
   for (const name of set.files) {
@@ -72,7 +74,16 @@ test("every tracked mirror file under contracts/ is covered and byte-equal", () 
   }
 });
 
-test("mirrorContracts copies the sources byte for byte into a sandbox", async () => {
+test("mirrorContracts skips a set whose spec source is absent", () => {
+  const sandbox = mkdtempSync(join(tmpdir(), "mirror151-empty-"));
+  try {
+    assert.deepEqual(mirrorContracts(sandbox), [], "no specs/, nothing written");
+  } finally {
+    rmSync(sandbox, { recursive: true, force: true });
+  }
+});
+
+test("mirrorContracts copies the sources byte for byte into a sandbox", { skip: NO_SPECS }, async () => {
   const sandbox = mkdtempSync(join(tmpdir(), "mirror151-"));
   try {
     cpSync(join(ROOT, "specs"), join(sandbox, "specs"), { recursive: true });
