@@ -52,3 +52,9 @@ testautomation/**
 # bare path stems, must not swallow them.
 !contracts/
 !contracts/**
+
+# Test fixtures are workspaces too: their specs/ and .specstride/ ARE the fixture
+# data (gen-corpus.ts: "The output is committed"). The two rules above swallowed
+# them, so a public clone failed 46 tests. Track them.
+!tests/fixtures/workspaces/*/specs/
+!tests/fixtures/workspaces/*/.specstride/

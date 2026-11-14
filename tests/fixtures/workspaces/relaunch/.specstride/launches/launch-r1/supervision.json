@@ -1,0 +1,7 @@
+{
+  "schema": "specstride.supervision/1",
+  "launchId": "launch-r1",
+  "state": "relaunching",
+  "previousLaunchId": "launch-r0",
+  "recordedAt": "2026-11-11T09:00:00.000Z"
+}

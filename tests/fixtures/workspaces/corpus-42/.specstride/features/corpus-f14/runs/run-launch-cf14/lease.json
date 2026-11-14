@@ -1,0 +1,9 @@
+{
+  "schema": "specstride.lease/1",
+  "feature": "corpus-f14",
+  "launchId": "launch-cf14",
+  "pid": null,
+  "starttime": null,
+  "acquiredAt": null,
+  "releasedAt": "2026-11-11T09:00:00.000Z"
+}

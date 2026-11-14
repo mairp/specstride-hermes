@@ -1,0 +1,9 @@
+{
+  "schema": "specstride.launch/1",
+  "launchId": "launch-p1",
+  "runId": "run-launch-p1",
+  "workspaceId": "pidreuse000000001",
+  "feature": "151-reuse",
+  "createdAt": "2026-11-11T09:00:00.000Z",
+  "outcome": "started"
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "specstride.launch/1",
+  "launchId": "launch-v1",
+  "runId": "run-launch-v1",
+  "workspaceId": "vanished00000001",
+  "feature": "151-vanish",
+  "createdAt": "2026-11-11T09:00:00.000Z",
+  "outcome": "lost"
+}

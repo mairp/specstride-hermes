@@ -1,0 +1,13 @@
+{
+  "schema": "specstride.procs/1",
+  "recordedAt": "2026-11-11T09:00:00.000Z",
+  "processes": [
+    {
+      "pid": 4310,
+      "starttime": 4200000,
+      "harness": "dsh",
+      "role": "proposer",
+      "feature": "corpus-f00"
+    }
+  ]
+}

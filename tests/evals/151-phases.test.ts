@@ -974,6 +974,12 @@ for (const [n, slug, build] of BUILDS) {
     }
     assert.deepEqual(failures, [], `phase ${n} failures:\n${failures.join("\n")}`);
 
+    // The FR coverage reads the spec, which stays local since the split: a
+    // public clone runs every case above and skips only this cross-check.
+    if (!existsSync(SPEC_TASKS)) {
+      t.diagnostic(`phase ${String(n).padStart(2, "0")} (${slug}): ${String(cases.length)} cases; FR coverage skipped (no specs/ in this clone)`);
+      return;
+    }
     const phases = parseSpecPhases(SPEC_TASKS);
     const mine = phases.find((p) => p.n === n);
     assert.ok(mine !== undefined, `tasks.md has no Phase ${n}`);

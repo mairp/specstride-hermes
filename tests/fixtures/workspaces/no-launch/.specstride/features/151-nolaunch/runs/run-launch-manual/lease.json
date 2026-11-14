@@ -1,0 +1,7 @@
+{
+  "schema": "specstride.lease/1",
+  "feature": "151-nolaunch",
+  "launchId": "launch-manual",
+  "pid": null,
+  "acquiredAt": "2026-11-11T08:00:00.000Z"
+}
