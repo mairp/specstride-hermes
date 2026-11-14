@@ -14,7 +14,7 @@
  * - a shim named `specstride` (contracts/shim.md, F150-FR-014).
  */
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 import { byteBudgetOf } from "@specstride/host-kit";
@@ -24,6 +24,8 @@ import { insertFrontmatter, validateFrontmatter } from "../src/frontmatter.ts";
 import { hermesShimScript, assertShimFileName, SHIM_FILE_NAME, shimBuildChecks } from "../src/shim.ts";
 import { checkReferenceClosure, checkNoEngineCopy, allGateFindings } from "../src/gates.ts";
 import { writeGeneratedClosedSets } from "./gen-kanban-values.ts";
+import { buildTab } from "./build-tab.ts";
+import { scanKanban } from "./scan-kanban.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -116,6 +118,23 @@ if (!existsSync(controlSource)) fail("the control CLI source scripts/specstride-
 writeFileSync(controlPath, readFileSync(controlSource));
 chmodSync(controlPath, 0o755);
 written.push(controlPath);
+
+// The dashboard tab (T062, T063, T065): the scan first — the five rules over
+// the tab client and the kanban surfaces (F151-FR-049) — then the bundle and
+// stylesheet, into `SPECSTRIDE_TAB_OUT` when set (the drift test's seam),
+// else the plugin's dashboard dist.
+for (const finding of scanKanban([
+  join(ROOT, "src", "tab", "client"),
+  join(ROOT, "src", "kanban", "map.ts"),
+  join(ROOT, "src", "kanban", "signature.ts"),
+])) fail(finding.rule + " at " + finding.path + ":" + String(finding.line) + " — " + finding.snippet);
+for (const path of buildTab(
+  process.env.SPECSTRIDE_TAB_OUT !== undefined && process.env.SPECSTRIDE_TAB_OUT !== ""
+    ? resolve(process.env.SPECSTRIDE_TAB_OUT)
+    : join(ROOT, "hermes-plugin", "specstride", "dashboard", "dist"),
+)) {
+  written.push(path);
+}
 
 // The whole static gate set must pass the built tree.
 for (const finding of allGateFindings(ROOT)) fail(finding);

@@ -102,7 +102,14 @@ test("live dispatcher lane: no projected card is ever claimed, spawned, assigned
     // home prepares the isolated runtime, so a long timeout here. A fresh
     // home can answer "no dependency environment is committed" (observed
     // 2026-11-14) until `hermes pm repair` commits one for it.
-    const repaired = hermes(home, ["pm", "repair"], 600_000);
+    // `pm repair` was observed to exit 1 on a fresh home while the isolated
+    // runtime is still being prepared (the attempt of 2026-11-14), so it is
+    // retried before the assertion.
+    let repaired = { status: 1 as number | null, stderr: "" };
+    for (let attempt = 0; attempt < 3 && repaired.status !== 0; attempt += 1) {
+      repaired = hermes(home, ["pm", "repair"], 600_000);
+      if (repaired.status !== 0) context.push(`pm repair attempt ${attempt + 1}: exit ${repaired.status}`);
+    }
     context.push(`pm repair: exit ${repaired.status}`);
     assert.equal(repaired.status, 0, repaired.stderr);
     const profile = hermes(home, ["profile", "create", "specstride"], 600_000);

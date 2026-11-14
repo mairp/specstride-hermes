@@ -1,0 +1,11 @@
+{
+  "name": "specstride-dashboard",
+  "version": "0.1.0",
+  "entry": "dist/index.js",
+  "css": "dist/style.css",
+  "api": "specstride/dashboard",
+  "tab": {
+    "path": "/specstride",
+    "position": "after:kanban"
+  }
+}

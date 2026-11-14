@@ -1,0 +1,121 @@
+/*
+ * The dashboard tab stylesheet (T060). Every selector carries the `sskh-`
+ * scope prefix (F151-FR-049); colour arrives only through the theme tokens
+ * `var(--color-*)`, the tab's own `--sskh-*` custom properties and
+ * `color-mix` over those. No hex, no named colour, no `rgb(`/`hsl(`.
+ */
+
+.sskh-board {
+  --sskh-tint: var(--color-border);
+  --sskh-dim: var(--color-text-muted, var(--color-text));
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-background) 92%, var(--color-border));
+}
+
+.sskh-banner {
+  margin: 0 0 0.5rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.sskh-source {
+  color: var(--color-text-muted, var(--color-text));
+}
+
+.sskh-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.sskh-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sskh-feature {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.sskh-feature-name {
+  color: var(--color-text);
+}
+
+.sskh-track {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.sskh-track-segment {
+  width: 0.75rem;
+  height: 0.375rem;
+  background: var(--sskh-tint);
+}
+
+.sskh-run {
+  color: var(--color-text-muted, var(--color-text));
+}
+
+.sskh-more {
+  color: var(--color-text-muted, var(--color-text));
+}
+
+.sskh-body {
+  display: flex;
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.sskh-lanes {
+  display: flex;
+  flex: 1;
+  gap: 0.5rem;
+  overflow-x: auto;
+}
+
+.sskh-lane {
+  flex: 1;
+  min-width: 10rem;
+  border: 1px solid var(--color-border);
+  padding: 0.25rem;
+}
+
+.sskh-lane-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.sskh-inspector {
+  width: 16rem;
+  border: 1px solid var(--color-border);
+  padding: 0.25rem;
+}
+
+.sskh-card {
+  border: 1px solid var(--color-border);
+  padding: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.sskh-card-title {
+  color: var(--color-text);
+}
+
+.sskh-badge {
+  display: inline-block;
+  padding: 0 0.375rem;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted, var(--color-text));
+}
+
+.sskh-attention,
+.sskh-budget {
+  padding: 0.25rem 0;
+}
