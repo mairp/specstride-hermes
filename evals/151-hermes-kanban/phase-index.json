@@ -1,0 +1,20 @@
+{
+  "campaign": 151,
+  "feature": "151-hermes-kanban",
+  "seed": 151,
+  "model-free": true,
+  "phases": [
+    { "phase": 1, "slug": "setup", "dir": "phase-01-setup", "generator": "gen/gen-phase-01-setup.ts", "frs": ["F151-FR-025", "F151-FR-031", "F151-FR-051", "F151-FR-054"] },
+    { "phase": 2, "slug": "foundational", "dir": "phase-02-foundational", "generator": "gen/gen-phase-02-foundational.ts", "frs": ["F151-FR-003", "F151-FR-005", "F151-FR-006", "F151-FR-007", "F151-FR-008", "F151-FR-010", "F151-FR-013", "F151-FR-034", "F151-FR-035", "F151-FR-038", "F151-FR-040", "F151-FR-051"] },
+    { "phase": 3, "slug": "us7-relaunch", "dir": "phase-03-us7-relaunch", "generator": "gen/gen-phase-03-us7-relaunch.ts", "frs": ["F151-FR-034", "F151-FR-035", "F151-FR-036", "F151-FR-037", "F151-FR-038"] },
+    { "phase": 4, "slug": "us1-projection", "dir": "phase-04-us1-projection", "generator": "gen/gen-phase-04-us1-projection.ts", "frs": ["F151-FR-001", "F151-FR-002", "F151-FR-004", "F151-FR-005", "F151-FR-006", "F151-FR-007", "F151-FR-008", "F151-FR-012", "F151-FR-029", "F151-FR-033", "F151-FR-035", "F151-FR-039", "F151-FR-040", "F151-FR-041", "F151-FR-042"] },
+    { "phase": 5, "slug": "us2-not-dispatchable", "dir": "phase-05-us2-not-dispatchable", "generator": "gen/gen-phase-05-us2-not-dispatchable.ts", "frs": ["F151-FR-003", "F151-FR-009", "F151-FR-010", "F151-FR-011", "F151-FR-012", "F151-FR-013", "F151-FR-017"] },
+    { "phase": 6, "slug": "us3-attention", "dir": "phase-06-us3-attention", "generator": "gen/gen-phase-06-us3-attention.ts", "frs": ["F151-FR-014", "F151-FR-015", "F151-FR-016", "F151-FR-017", "F151-FR-037"] },
+    { "phase": 7, "slug": "us4-dashboard-tab", "dir": "phase-07-us4-dashboard-tab", "generator": "gen/gen-phase-07-us4-dashboard-tab.ts", "frs": ["F151-FR-006", "F151-FR-018", "F151-FR-019", "F151-FR-020", "F151-FR-021", "F151-FR-022", "F151-FR-023", "F151-FR-024", "F151-FR-025", "F151-FR-031", "F151-FR-039", "F151-FR-046", "F151-FR-047", "F151-FR-048", "F151-FR-049", "F151-FR-050", "F151-FR-052"] },
+    { "phase": 8, "slug": "us6-inspector", "dir": "phase-08-us6-inspector", "generator": "gen/gen-phase-08-us6-inspector.ts", "frs": ["F151-FR-043", "F151-FR-044", "F151-FR-045", "F151-FR-047"] },
+    { "phase": 9, "slug": "us5-consented-actions", "dir": "phase-09-us5-consented-actions", "generator": "gen/gen-phase-09-us5-consented-actions.ts", "frs": ["F151-FR-026", "F151-FR-027", "F151-FR-028"] },
+    { "phase": 10, "slug": "polish", "dir": "phase-10-polish", "generator": "gen/gen-phase-10-polish.ts", "frs": ["F151-FR-016", "F151-FR-022", "F151-FR-023", "F151-FR-030", "F151-FR-032", "F151-FR-050", "F151-FR-053"] }
+  ],
+  "runner": "tests/evals/151-phases.test.ts",
+  "hygiene": "tests/evals/151-phases-hygiene.test.ts"
+}
