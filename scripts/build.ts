@@ -26,6 +26,7 @@ import { checkReferenceClosure, checkNoEngineCopy, allGateFindings } from "../sr
 import { writeGeneratedClosedSets } from "./gen-kanban-values.ts";
 import { buildTab } from "./build-tab.ts";
 import { scanKanban } from "./scan-kanban.ts";
+import { mirrorContracts } from "./mirror-contracts.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -135,6 +136,10 @@ for (const path of buildTab(
 )) {
   written.push(path);
 }
+
+// The contract mirrors (T080): copy the source contracts byte for byte
+// before the gates read the tree (F151-FR-027, no git).
+for (const path of mirrorContracts(ROOT)) written.push(path);
 
 // The whole static gate set must pass the built tree.
 for (const finding of allGateFindings(ROOT)) fail(finding);

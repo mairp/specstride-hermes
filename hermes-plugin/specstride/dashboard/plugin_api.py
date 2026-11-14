@@ -11,6 +11,17 @@ view per token and the engine memo are the Node handler's state, never this
 file's.
 """
 
+import os
+import sys
+
+# Hermes imports this file by path (spec_from_file_location), so the plugin
+# root is not on sys.path yet; the `specstride._forward` import below needs
+# the plugin's PARENT directory (the plugins root that holds `specstride/`).
+# Path bootstrap only — still no logic in this module.
+_PLUGINS_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _PLUGINS_DIR not in sys.path:
+    sys.path.insert(0, _PLUGINS_DIR)
+
 import specstride._forward as _forward
 from fastapi import APIRouter  # Hermes provides fastapi to every router
 
@@ -109,18 +120,26 @@ def _mount():
 
         return None, routes, add
 
-    return APIRouter(prefix="/api/plugins/specstride"), None, None
+    # No prefix here: Hermes mounts the router under `/api/plugins/<name>`
+    # itself; the tails are added by _register below.
+    return APIRouter(), None, None
 
 
 _router, _fallback_routes, _fallback_add = _mount()
 
+# The APIRouter is mounted by Hermes under `/api/plugins/<name>` already, so
+# its own routes take the tail only; the fallback router (no fastapi) carries
+# the full path, as the AST test and the direct-request path expect.
+_ROUTER_PREFIX = "/api/plugins/specstride"
+
 
 def _register(method, path, endpoint):
     if _router is not None:
+        tail = path[len(_ROUTER_PREFIX):]
         if method == "GET":
-            _router.get(path)(endpoint)
+            _router.get(tail)(endpoint)
         else:
-            _router.post(path)(endpoint)
+            _router.post(tail)(endpoint)
     else:
         _fallback_add(method, path, endpoint)
 

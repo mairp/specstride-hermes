@@ -62,6 +62,52 @@ systemctl --user status specstride-hermes-watch
 It calls no model, finishes within 2 s on the reference machine, and never
 installs, enables, configures or changes anything.
 
+## Kanban and dashboard tab
+
+`install --with-kanban` installs the projector module — `src/kanban`, `src/tab`
+and the dashboard assets of the package — under
+`<home>/specstride-host/kanban/module`, recorded by a `kanban.json` marker that
+carries the package version; a module of another version is refused, and the
+install must equal this package's own (`src/installer.ts`,
+`installKanbanModule`). When that module is in place, 150's watcher unit runs
+one sync cycle per workspace of `watch.json` at the end of each watch cycle;
+without it, nothing is registered and the watcher stays unchanged
+(`src/kanban/register.ts`).
+
+What appears on the board is fixed by contract
+(`specs/151-hermes-kanban/contracts/card-projection.md`): one root card per run
+(key `specstride:<run-id>`), one stage card per phase of that run, and one
+`blocked` card per attention item. A feature that was never run produces
+nothing — there is no card for it. A board write made by a person (a moved
+column, a changed assignee) is undone by the restore guard within one cycle;
+the read-back runs at least every 60 s, and a human-edited title or body is
+kept and gets one stale comment instead (`tests/kanban/restore.test.ts`,
+`contracts/sync-sidecar.md` "Foreign writes").
+
+Every view names its origin. A view the workspace reader built carries the
+body line `source: workspace-reader` and the rule id that placed each card
+(`src/kanban/view-source.ts`, `src/kanban/reader/`); it is used only where the
+engine's `status --json` answer is unavailable or carries no card, and an
+engine view with at least one card always wins over it. A card with a detail
+opens an inspector beside the lanes, with five sections in order — Scope, Live,
+Attempts, Launches, Cost and limits. It shows no absolute path (paths are
+reduced to workspace-relative, `~/…` or a base name) and marks what the inputs
+cannot say as `not observable` or `not reported`
+(`specs/151-hermes-kanban/contracts/card-detail.md`).
+
+`specstride-host-hermes doctor` appends to `host.kanban-plugin` one line with
+eleven observed facts, from `kanban-enabled` to `view-source`
+(`src/doctor.ts`, `specs/150-host-hermes/contracts/doctor-output.md`). A fact
+that could not be observed reads `unknown` and makes the line informational
+(`info`, never `ok`); the check never blocks a launch.
+
+The reader is a stand-in. It is retired when the engine's `status --json`
+carries, for a pipeline-launched run, the cards and their detail (upstream row
+U-151-09, F151-FR-042); until then `specstride.kanban.reader: off` in the
+specstride profile configuration disables it, leaving the absent marker where
+the engine gives no view
+(`specs/151-hermes-kanban/spec.md` U-151-09 / F151-FR-042).
+
 ## Out of scope
 
 | Not here | Owner |

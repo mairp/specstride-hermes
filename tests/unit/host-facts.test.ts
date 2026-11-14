@@ -29,6 +29,61 @@ test("the table holds the 39 rows of the contract, HF-VERSION through HF-KANBAN-
   assert.equal(new Set(ids).size, ids.length, "row ids are unique");
 });
 
+test("the original 24 rows of 150 are unchanged and in order, row 24 still HF-VERSION-FMT", () => {
+  const original24 = [
+    "HF-VERSION",
+    "HF-SKILL-FM",
+    "HF-NO-INVOKE-FIELD",
+    "HF-BUNDLED",
+    "HF-ROOTS",
+    "HF-ENABLE",
+    "HF-VALIDATE",
+    "HF-CMD",
+    "HF-PRE-LLM",
+    "HF-HOOK-TIMEOUT",
+    "HF-SOURCE-ENV",
+    "HF-GW-UNIT",
+    "HF-GW-SURVIVAL",
+    "HF-SEND",
+    "HF-HEADLESS",
+    "HF-SKILL-LOAD",
+    "HF-STREAM-JSON",
+    "HF-BACKEND",
+    "HF-CONFIG-GET",
+    "HF-PLUGINS-LIST",
+    "HF-PLUGINS-DISABLE",
+    "HF-SKILLS-LIST",
+    "HF-PROFILE-CREATE",
+    "HF-VERSION-FMT",
+  ];
+  assert.deepEqual(hostFacts.slice(0, 24).map((row) => row.id), original24);
+  assert.equal(hostFacts[23].id, "HF-VERSION-FMT");
+});
+
+test("the 15 rows of 151 follow in the contract's order: six dashboard rows, then nine Kanban rows", () => {
+  const dashboard = [
+    "HF-DASH-TOKENS",
+    "HF-DASH-THEME-SWITCH",
+    "HF-DASH-SDK",
+    "HF-DASH-API-404",
+    "HF-DASH-CSS",
+    "HF-SESSION-USAGE",
+  ];
+  const kanban = [
+    "HF-KANBAN-CLI",
+    "HF-KANBAN-NONSPAWN",
+    "HF-KANBAN-BLOCK",
+    "HF-KANBAN-PROMOTE",
+    "HF-KANBAN-RUNNING",
+    "HF-KANBAN-TRIAGE",
+    "HF-KANBAN-SCHEDULED",
+    "HF-KANBAN-HOOK",
+    "HF-KANBAN-NOTIFY",
+  ];
+  assert.deepEqual(hostFacts.slice(24, 30).map((row) => row.id), dashboard);
+  assert.deepEqual(hostFacts.slice(30, 39).map((row) => row.id), kanban);
+});
+
 test("every row carries a source and the Hermes pin", () => {
   for (const row of hostFacts) {
     assert.match(row.id, /^HF-[A-Z0-9-]+$/);

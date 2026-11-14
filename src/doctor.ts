@@ -203,8 +203,280 @@ function headlessDenyKeys(): string[] {
   return denied;
 }
 
+/** The eleven facts of `host.kanban-plugin`, in the closed set's order. */
+export const KANBAN_FACT_IDS: readonly string[] = Object.freeze([
+  "kanban-enabled",
+  "projector-alive",
+  "tab-enabled",
+  "map-version",
+  "shim-on-unit-path",
+  "engine-answers-protocol",
+  "engine-path",
+  "engine-matches-pin",
+  "host-cli-runs-installed",
+  "engine-view-has-cards",
+  "view-source",
+]);
+
+export type KanbanFactId = (typeof KANBAN_FACT_IDS)[number];
+export type KanbanFacts = Record<KanbanFactId, string>;
+
+export const KANBAN_UNIT = "specstride-hermes-watch";
+
+/** The store-side snapshot the projector facts read (F151-FR-053). */
+export interface KanbanStoreSnapshot {
+  readonly hasStore: boolean;
+  readonly newest: { readonly source: string; readonly cards: number; readonly stale: boolean; readonly lastGoodAt: string | null } | null;
+  readonly anyGood: boolean;
+}
+
+function readStoreSnapshot(): KanbanStoreSnapshot {
+  const dir = storeDirOf(hermesHome());
+  let names: string[];
+  try {
+    names = fs.readdirSync(dir).filter((n) => n.endsWith(".json") && !n.includes(".tmp"));
+  } catch {
+    return { hasStore: false, newest: null, anyGood: false };
+  }
+  let newest: KanbanStoreSnapshot["newest"] = null;
+  let newestAt = "";
+  let anyGood = false;
+  for (const name of names) {
+    let record: { source?: unknown; cards?: unknown; stale?: unknown; lastGoodAt?: unknown };
+    try {
+      record = JSON.parse(fs.readFileSync(join(dir, name), "utf8"));
+    } catch {
+      continue;
+    }
+    const lastGoodAt = typeof record.lastGoodAt === "string" ? record.lastGoodAt : null;
+    const stale = record.stale === true;
+    if (!stale && lastGoodAt !== null) anyGood = true;
+    if (lastGoodAt !== null && lastGoodAt > newestAt) {
+      newestAt = lastGoodAt;
+      newest = {
+        source: record.source === "workspace-reader" ? "workspace-reader" : "engine",
+        cards: Array.isArray(record.cards) ? record.cards.length : 0,
+        stale,
+        lastGoodAt,
+      };
+    }
+  }
+  return { hasStore: names.length > 0, newest, anyGood };
+}
+
+/** `~`-root a path for the report (the report carries no absolute path). */
+function tildify(path: string): string {
+  const home = homedir();
+  return path === home ? "~" : path.startsWith(home + "/") ? `~${path.slice(home.length)}` : path;
+}
+
+/** The engine version this package is built against (`specstride.engineVersion`). */
+function thisPackageEngineVersion(): string | null {
+  try {
+    const manifest = JSON.parse(fs.readFileSync(join(PACKAGE_ROOT, "package.json"), "utf8")) as {
+      specstride?: { engineVersion?: string };
+    };
+    return manifest.specstride?.engineVersion ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** The commit this package pins the engine at, or null when unreadable. */
+function thisPackagePinCommit(): string | null {
+  try {
+    const pin = JSON.parse(fs.readFileSync(join(PACKAGE_ROOT, "core-pin.json"), "utf8")) as { commit?: string };
+    return typeof pin.commit === "string" ? pin.commit : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The watcher unit's environment (`systemctl --user show … -p Environment`). */
+function unitEnvironment(): string | null {
+  const done = spawnSync("systemctl", ["--user", "show", KANBAN_UNIT, "-p", "Environment"], { encoding: "utf8" });
+  if (done.error !== undefined || done.status !== 0) return null;
+  const line = (done.stdout ?? "").trim();
+  return line.startsWith("Environment=") ? line.slice("Environment=".length) : null;
+}
+
+/** The `PATH` entries of a raw unit-environment value, else null. */
+function unitPathEntries(environment: string | null): string[] | null {
+  if (environment === null) return null;
+  const m = /(?:^|[\s"'])PATH=([^"']*)/.exec(environment);
+  return m ? m[1].split(":") : null;
+}
+
+function isExecutable(path: string): boolean {
+  try {
+    fs.accessSync(path, fs.constants.X_OK);
+    return fs.statSync(path).isFile();
+  } catch {
+    return false;
+  }
+}
+
+/** The shim inside a directory list. */
+function shimInPaths(paths: readonly string[]): string | null {
+  for (const dir of paths) {
+    if (dir === "") continue;
+    const candidate = join(dir, "specstride-hermes");
+    if (isExecutable(candidate)) return candidate;
+  }
+  return null;
+}
+
+/** The engine the unit's environment resolves (the shim's steps 1–2). */
+function engineInPaths(paths: readonly string[]): string | null {
+  const fromEnv = process.env.SPECSTRIDE_BIN;
+  if (fromEnv && isExecutable(fromEnv)) return fromEnv;
+  for (const dir of paths) {
+    if (dir === "") continue;
+    const candidate = join(dir, "specstride");
+    if (isExecutable(candidate)) return candidate;
+  }
+  return null;
+}
+
+/** `--protocol` of the resolved engine: the integer it speaks, or null. */
+function engineProtocol(enginePath: string): number | null {
+  const done = spawnSync(enginePath, ["--protocol"], { encoding: "utf8" });
+  if (done.error !== undefined || done.status !== 0) return null;
+  const n = Number.parseInt((done.stdout ?? "").trim(), 10);
+  return Number.isInteger(n) ? n : null;
+}
+
+/** The engine package's version and commit, read beside the engine binary. */
+function enginePackage(enginePath: string): { version: string | null; pinCommit: string | null; pinReadable: boolean } {
+  const root = dirname(dirname(enginePath));
+  let version: string | null = null;
+  try {
+    const manifest = JSON.parse(fs.readFileSync(join(root, "package.json"), "utf8")) as { version?: string };
+    version = typeof manifest.version === "string" ? manifest.version : null;
+  } catch {
+    version = null;
+  }
+  let pinCommit: string | null = null;
+  let pinReadable = false;
+  try {
+    const pin = JSON.parse(fs.readFileSync(join(root, "core-pin.json"), "utf8")) as { commit?: string };
+    pinReadable = true;
+    pinCommit = typeof pin.commit === "string" ? pin.commit : null;
+  } catch {
+    pinReadable = false;
+  }
+  return { version, pinCommit, pinReadable };
+}
+
+/** Whether `specstride-host-hermes` on the PATH resolves its modules. */
+function hostCliRuns(): boolean | null {
+  const which = spawnSync("which", ["specstride-host-hermes"], { encoding: "utf8" });
+  if (which.status !== 0 || which.stdout.trim() === "") return null;
+  // A probe argv the dispatcher refuses with a usage error (exit 3) — it
+  // still proves the module graph resolves; ERR_MODULE_NOT_FOUND proves not.
+  const probe = spawnSync(which.stdout.trim(), ["__kanban-doctor-probe__"], { encoding: "utf8" });
+  if (probe.error !== undefined && (probe.error as NodeJS.ErrnoException).code === "ENOENT") return null;
+  if (probe.status === null && /ERR_MODULE_NOT_FOUND|Cannot find (module|package)/.test(probe.stderr ?? "")) return false;
+  return true;
+}
+
+/** The dispatcher-test record of the lane map's live pass, or null. */
+function dispatcherTestPassed(): boolean | null {
+  try {
+    const body = JSON.parse(fs.readFileSync(join(storeDirOf(hermesHome()), "dispatcher-test.json"), "utf8")) as {
+      passed?: unknown;
+    };
+    return body.passed === true;
+  } catch {
+    return null;
+  }
+}
+
+/** The map in force: v2 only behind configuration AND the dispatcher test. */
+function mapInForce(): string {
+  const configured = configGet("specstride.kanban.map");
+  if (configured === null) return "unknown";
+  if (configured !== "v2") return "v1";
+  return dispatcherTestPassed() === true ? "v2" : "v1";
+}
+
+function storeDirOf(home: string): string {
+  return join(home, "specstride-host", "kanban");
+}
+
+/**
+ * Observe the eleven facts of `host.kanban-plugin` (T076). Every observation
+ * failure gives `unknown`, never a guess; the caller may inject any fact to
+ * override what observation found (the seam tests use, PT-151-053).
+ */
+export function kanbanFacts(injected: Partial<KanbanFacts> = {}, plugins?: { name: string; enabled: boolean }[] | null): KanbanFacts {
+  const facts: KanbanFacts = {
+    "kanban-enabled": "unknown",
+    "projector-alive": "unknown",
+    "tab-enabled": "unknown",
+    "map-version": "unknown",
+    "shim-on-unit-path": "unknown",
+    "engine-answers-protocol": "unknown",
+    "engine-path": "unknown",
+    "engine-matches-pin": "unknown",
+    "host-cli-runs-installed": "unknown",
+    "engine-view-has-cards": "unknown",
+    "view-source": "unknown",
+  };
+
+  const mine = plugins?.find((p) => p.name === "specstride") ?? null;
+  facts["kanban-enabled"] = plugins === undefined || plugins === null
+    ? "unknown"
+    : plugins.some((p) => p.name === "kanban" || p.name === "hermes-kanban") && plugins.find((p) => p.name === "kanban" || p.name === "hermes-kanban")!.enabled
+      ? "yes"
+      : "no";
+  const tabManifest = join(PACKAGE_ROOT, "hermes-plugin", "specstride", "dashboard", "manifest.json");
+  facts["tab-enabled"] = plugins === undefined || plugins === null
+    ? "unknown"
+    : mine !== null && mine.enabled && fs.existsSync(tabManifest)
+      ? "yes"
+      : "no";
+  facts["map-version"] = mapInForce();
+
+  const store = readStoreSnapshot();
+  facts["projector-alive"] = !store.hasStore ? "unknown" : store.anyGood ? "yes" : "no";
+  if (store.newest !== null) {
+    facts["engine-view-has-cards"] = store.newest.source === "engine" ? (store.newest.cards > 0 ? "yes" : "no") : "unknown";
+    facts["view-source"] = store.newest.source;
+  }
+
+  const environment = unitEnvironment();
+  const paths = unitPathEntries(environment);
+  facts["shim-on-unit-path"] = paths === null ? "unknown" : shimInPaths(paths) !== null ? "yes" : "no";
+  if (paths !== null) {
+    const engine = engineInPaths(paths);
+    if (engine !== null) {
+      facts["engine-path"] = tildify(engine);
+      const spoken = engineProtocol(engine);
+      facts["engine-answers-protocol"] = spoken === null ? "no" : "yes";
+      const pkg = enginePackage(engine);
+      const want = thisPackageEngineVersion();
+      if (pkg.version === null || want === null) {
+        facts["engine-matches-pin"] = "unknown";
+      } else if (pkg.version !== want) {
+        facts["engine-matches-pin"] = "no";
+      } else if (!pkg.pinReadable) {
+        // The installed package ships no core-pin.json (F151-FR-053).
+        facts["engine-matches-pin"] = "yes (version; commit unknown)";
+      } else {
+        const wantCommit = thisPackagePinCommit();
+        facts["engine-matches-pin"] = wantCommit !== null && pkg.pinCommit === wantCommit ? "yes" : "no";
+      }
+    }
+  }
+  const cliResolves = hostCliRuns();
+  facts["host-cli-runs-installed"] = cliResolves === null ? "unknown" : cliResolves ? "yes" : "no";
+
+  return { ...facts, ...injected };
+}
+
 /** The eight checks; every probe failure degrades to a warning, never a crash. */
-export function collectFindings(): Finding[] {
+export function collectFindings(injectedKanbanFacts: Partial<KanbanFacts> = {}): Finding[] {
   const findings: Finding[] = [];
   const blocking = (id: string) => LAUNCH_CHECK_IDS.includes(id);
 
@@ -420,23 +692,32 @@ export function collectFindings(): Finding[] {
     findings.push({ id: "host.plugin-enabled", severity: "ok", message: `the specstride plugin is enabled in profile ${profile}`, blocking: false });
   }
 
-  // 8. host.kanban-plugin — informational only.
-  const kanban = plugins?.find((p) => p.name === "kanban" || p.name === "hermes-kanban") ?? null;
-  if (kanban !== null && kanban.enabled) {
+  // 8. host.kanban-plugin — informational only, with the facts of 151
+  //    (T075, T076; F151-FR-030, F151-FR-053; data-model.md "DoctorFacts").
+  const facts = kanbanFacts(injectedKanbanFacts, plugins);
+  const kanbanEnabled = facts["kanban-enabled"];
+  const unknownFacts = KANBAN_FACT_IDS.filter((id) => facts[id as KanbanFactId] === "unknown");
+  const pairs = KANBAN_FACT_IDS.map((id) => `${id} ${facts[id]}`).join("; ");
+  const notifyNote =
+    "notify-subscribe delivery for the non-profile assignee specstride-projection: unknown (U-151-05) — " +
+    "Telegram delivery belongs to the 150 notifier (specstride.notify.telegram)";
+  if (kanbanEnabled !== "yes") {
     findings.push({
       id: "host.kanban-plugin",
-      severity: "ok",
+      severity: kanbanEnabled === "unknown" ? "warn" : "info",
       message:
-        "the Hermes Kanban is enabled; the 151 projection is not installed; " +
-        "notify-subscribe delivery for the non-profile assignee specstride-projection: unknown (U-151-05) — " +
-        "Telegram delivery belongs to the 150 notifier (specstride.notify.telegram)",
+        kanbanEnabled === "unknown"
+          ? `the Hermes Kanban could not be observed (informational; 151 installs the projection) — ${pairs}; ${notifyNote}`
+          : `the Hermes Kanban is not enabled (informational; 151 installs the projection) — ${pairs}; ${notifyNote}`,
       blocking: false,
     });
   } else {
     findings.push({
       id: "host.kanban-plugin",
-      severity: "info",
-      message: "the Hermes Kanban is not enabled (informational; 151 installs the projection)",
+      // An unobserved fact keeps the line at `info`, never `ok` (F151-FR-030:
+      // the doctor says `unknown`, never ok by assumption; L14, L19).
+      severity: unknownFacts.length > 0 ? "info" : "ok",
+      message: `the Hermes Kanban is enabled — ${pairs}; ${notifyNote}`,
       blocking: false,
     });
   }

@@ -287,12 +287,105 @@ export function checkNoBash(root: string): Findings {
   return findings;
 }
 
+/**
+ * The 151 extension of the spawn scan (T079; constitution H2, PT-151-032):
+ * over `src/kanban/` and `src/tab/` only two files may spawn the engine
+ * through 150's shim — `src/kanban/shim-call.ts` and `src/tab/handler.ts`
+ * — and nothing under `src/kanban/reader/` spawns a process at all (the
+ * reader only reads the workspace files and marks its output).
+ */
+const KANBAN_SPAWN_SCOPES: readonly string[] = [join("src", "kanban"), join("src", "tab")];
+const KANBAN_SPAWN_ALLOWLIST: readonly string[] = [
+  join("src", "kanban", "shim-call.ts"),
+  join("src", "tab", "handler.ts"),
+];
+const READER_ROOT = join("src", "kanban", "reader");
+/** Any process-starting call, in the spawn sense — not a regex's `.exec()`. */
+const ANY_SPAWN_PATTERN = /(?<!\.)\b(spawnSync|spawn|execFile|execFileSync|execSync|exec)\s*\(/;
+
+/** Gate: the Kanban and tab sources spawn only through 150's shim, and the reader spawns nothing. */
+export function checkKanbanSpawnScan(root: string): Findings {
+  const findings: Findings = [];
+  for (const scope of KANBAN_SPAWN_SCOPES) {
+    for (const file of filesUnder(root, scope)) {
+      if (![".ts", ".mjs", ".js"].includes(extname(file))) continue;
+      const id = relative(root, file);
+      const text = readFileSync(file, "utf8");
+      // Naming or spawning the engine executable outside the two allowlisted
+      // files: the same patterns the 150 scan uses over the whole tree.
+      if (!KANBAN_SPAWN_ALLOWLIST.includes(id)) {
+        const match = SPAWN_CALL_PATTERN.exec(text) ?? CLI_COMMAND_PATTERN.exec(text);
+        if (match)
+          findings.push(
+            `kanban-spawn: ${id} names the engine executable; only src/kanban/shim-call.ts and src/tab/handler.ts may, and only through 150's shim (H2, PT-151-032)`,
+          );
+      }
+      // The reader: no process at all, in any file under src/kanban/reader/.
+      if (id.startsWith(READER_ROOT + "/") && ANY_SPAWN_PATTERN.test(text))
+        findings.push(`kanban-spawn: ${id} starts a process; nothing under src/kanban/reader/ may spawn (H2, PT-151-032)`);
+    }
+  }
+  // The allowlisted spawn sites: the call must go to 150's shim (the shim is
+  // spawned as `process.execPath <shim> …`, the join trick keeps the literal
+  // out of this file).
+  const shimName = ["specstride", "hermes"].join("-");
+  for (const id of KANBAN_SPAWN_ALLOWLIST) {
+    let text: string;
+    try {
+      text = readFileSync(join(root, id), "utf8");
+    } catch {
+      continue;
+    }
+    if (!ANY_SPAWN_PATTERN.test(text)) continue;
+    if (!text.includes("process.execPath") || !text.includes(shimName))
+      findings.push(`kanban-spawn: ${id} must spawn 150's shim through process.execPath, nothing else (H2)`);
+  }
+  return findings;
+}
+
+/** The model-name shapes the provider-host gate refuses in a test file. */
+const MODEL_NAME_PATTERN =
+  /(claude[- ]?\d|gpt-\d|o\d-preview|deepseek-(chat|reasoner)|gemini-\d|grok-\d|mistral-large|llama-\d)/i;
+
+/**
+ * Gate: no test file of the Kanban feature names a provider host of
+ * tests/helpers/provider-hosts.json or a model (F151-FR-032, F151-SC-005;
+ * the gate makes 0 model calls and resolves no provider host).
+ */
+export function checkNoProviderHostsInTests(root: string): Findings {
+  const findings: Findings = [];
+  let hosts: readonly string[] = [];
+  try {
+    hosts = (JSON.parse(readFileSync(join(root, "tests", "helpers", "provider-hosts.json"), "utf8")) as {
+      hosts?: readonly string[];
+    }).hosts ?? [];
+  } catch {
+    return findings;
+  }
+  const scopes = ["tests/kanban", "tests/tab", "tests/doctor", "tests/live"];
+  for (const scope of scopes) {
+    for (const file of filesUnder(root, scope)) {
+      if (!file.endsWith(".test.ts")) continue;
+      const id = relative(root, file);
+      const text = readFileSync(file, "utf8");
+      for (const host of hosts) {
+        if (text.includes(host)) findings.push(`no-provider-host: ${id} names the provider host ${host} (F151-SC-005)`);
+      }
+      const model = MODEL_NAME_PATTERN.exec(text);
+      if (model) findings.push(`no-provider-host: ${id} names a model (${model[0]}); the gate makes 0 model calls (F151-FR-032)`);
+    }
+  }
+  return findings;
+}
+
 /** Every gate, with its name; used by `npm test` and `scripts/conformance.ts`. */
 export function runAllGates(root: string): Readonly<Record<string, Findings>> {
   return {
     "no-engine-copy": checkNoEngineCopy(root),
     "reference-closure": checkReferenceClosure(root),
     "cli-spawn": checkCliSpawnScan(root),
+    "kanban-spawn": checkKanbanSpawnScan(root),
+    "no-provider-host": checkNoProviderHostsInTests(root),
     "language-ledger": checkLanguageLedger(root),
     "no-logic-in-python": checkNoLogicInPython(root),
     "no-bash": checkNoBash(root),

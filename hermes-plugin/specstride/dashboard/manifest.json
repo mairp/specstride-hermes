@@ -1,11 +1,11 @@
 {
-  "name": "specstride-dashboard",
-  "version": "0.1.0",
+  "name": "specstride",
+  "label": "Specstride",
+  "description": "Run view: lanes, attention, quota, approvals (read-only).",
+  "icon": "Activity",
+  "version": "0.0.0",
+  "tab": { "path": "/specstride", "position": "after:kanban" },
   "entry": "dist/index.js",
   "css": "dist/style.css",
-  "api": "specstride/dashboard",
-  "tab": {
-    "path": "/specstride",
-    "position": "after:kanban"
-  }
+  "api": "plugin_api.py"
 }

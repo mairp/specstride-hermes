@@ -49,12 +49,20 @@ function hermesVersion(bin = "hermes"): { version: string; raw: string } | null 
 }
 
 const version = hermesVersion();
+// T079: the per-change runner (`npm test`) includes this lane and sets
+// SPECSTRIDE_PER_CHANGE=1; the lane answers `skipped` — never `passed` —
+// there, and is run for real only with `npm run test:live`.
+const PER_CHANGE_SKIP =
+  process.env.SPECSTRIDE_PER_CHANGE === "1"
+    ? "per-change run (npm test): run this lane explicitly with npm run test:live"
+    : undefined;
 const SKIP_REASON =
-  version === null
+  PER_CHANGE_SKIP ??
+  (version === null
     ? "hermes is not on PATH"
     : version.version !== PINNED_VERSION
       ? `unpinned hermes version ${version.version} != ${PINNED_VERSION}`
-      : undefined;
+      : undefined);
 
 const LANES = ["queued", "proposing", "verifying", "reviewing", "approved", "blocked", "paused", "failed"] as const;
 const RUN_STATES = [
