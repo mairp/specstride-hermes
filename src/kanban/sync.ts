@@ -24,7 +24,8 @@ import { projectAll, type WantedCard } from "./project.ts";
 import { planVerbs, signatureOfWanted, type PlannedVerb, type StoredCard, type ActualCard } from "./diff.ts";
 import { ProjectionStore, type ProjectedCard, type ProjectionRecord } from "./store.ts";
 import { viewOf, type EngineMemo, type ViewSourceDeps } from "./view-source.ts";
-import { kanbanCreate, kanbanSchedule, kanbanEdit, kanbanComplete, kanbanArchive, kanbanShow, kanbanPromote, kanbanBlock, type KanbanCall } from "./hermes-kanban.ts";
+import { kanbanCreate, kanbanSchedule, kanbanEdit, kanbanComplete, kanbanArchive, kanbanShow, kanbanPromote, kanbanBlock, kanbanComment, type KanbanCall } from "./hermes-kanban.ts";
+import { STALE_COMMENT } from "./diff.ts";
 import { readWatchList } from "../watch/watch-list.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -128,8 +129,11 @@ export async function syncOnce(workspace: string, deps: SyncDeps): Promise<Cycle
   const hostVer = hostVersion();
   const nowIso = new Date(now()).toISOString();
 
-  // Signature short-cut: an unchanged signature gives no `hermes` call at all.
-  if (record.signature === token && record.signature !== "") {
+  // Signature short-cut: an unchanged signature gives no `hermes` call at
+  // all — except when the read-back is due: a foreign write must be found
+  // within 60 s even when the view never changed (F151-FR-027, FR-028).
+  const readBackDue = record.lastReadBackAt === null || now() - record.lastReadBackAt >= FOREIGN_READBACK_MS;
+  if (record.signature === token && record.signature !== "" && !readBackDue) {
     return { kind: "view", shortCircuit: true, verbs: [], ok: true };
   }
 
@@ -152,6 +156,8 @@ export async function syncOnce(workspace: string, deps: SyncDeps): Promise<Cycle
           column: typeof shown.column === "string" ? shown.column : card.column,
           assignee: typeof shown.assignee === "string" ? shown.assignee : undefined,
           tenant: typeof shown.tenant === "string" ? shown.tenant : undefined,
+          title: typeof shown.title === "string" ? shown.title : undefined,
+          body: typeof shown.body === "string" ? shown.body : undefined,
         });
       } catch {
         /* a torn show body: no actual row this cycle */
@@ -174,6 +180,7 @@ export async function syncOnce(workspace: string, deps: SyncDeps): Promise<Cycle
     else if (verb.verb === "archive") call = kanbanArchive({ key: verb.key, id });
     else if (verb.verb === "promote") call = kanbanPromote({ key: verb.key, id });
     else if (verb.verb === "block") call = kanbanBlock({ key: verb.key, id, text: verb.blockText ?? "" });
+    else if (verb.verb === "comment") call = kanbanComment({ key: verb.key, id, text: verb.commentText ?? STALE_COMMENT });
     if (call === null) continue;
     const out = await exec(call);
     if (out.exit !== 0) {
@@ -197,15 +204,22 @@ export async function syncOnce(workspace: string, deps: SyncDeps): Promise<Cycle
     return { kind: "view", shortCircuit: false, verbs, ok: false };
   }
 
-  // Store the new state atomically: whole record, one write (store.ts).
+  // Store the new state atomically: whole record, one write (store.ts). A
+  // card that received the stale comment is human-edited from now on: its
+  // text is never written again (sync-sidecar.md "Foreign writes").
+  const commentedKeys = new Set(verbs.filter((verb) => verb.verb === "comment").map((verb) => verb.key));
   const previousByKey = new Map(record.cards.map((card) => [card.key, card]));
-  const cards = wanted.map((card) => toProjected(card, ids.get(card.key) ?? null, previousByKey.get(card.key) ?? null, nowIso));
+  const cards = wanted.map((card) => {
+    const projected = toProjected(card, ids.get(card.key) ?? null, previousByKey.get(card.key) ?? null, nowIso);
+    return commentedKeys.has(card.key) ? { ...projected, humanEdited: true } : projected;
+  });
   const next: ProjectionRecord = {
     cards,
     source: answer.source,
     signature: token,
     lastGoodAt: nowIso,
     stale: false,
+    lastReadBackAt: now(),
   };
   store.save(key, next);
   return { kind: "view", shortCircuit: false, verbs, ok: true };
@@ -214,6 +228,9 @@ export async function syncOnce(workspace: string, deps: SyncDeps): Promise<Cycle
 /** The backoff of a failed cycle: 5 s doubling to at most 5 min. */
 export const BACKOFF_START_MS = 5_000;
 export const BACKOFF_MAX_MS = 5 * 60_000;
+/** The foreign-write read-back window: at least one read-back per 60 s,
+ *  even when the change signature never changes (F151-FR-027, FR-028). */
+export const FOREIGN_READBACK_MS = 60_000;
 export function backoffMs(failures: number): number {
   return Math.min(BACKOFF_START_MS * 2 ** Math.max(0, failures - 1), BACKOFF_MAX_MS);
 }

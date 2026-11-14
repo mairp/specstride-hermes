@@ -2437,6 +2437,15 @@ function stripOf(
                                       
  
 
+/** The pure UI state the tree may render besides the view (US5): whether
+ *  the profile turned the consented actions on, which verb awaits its
+ *  confirmation, and the verbatim output of the last sent verb. */
+                          
+                             
+                                       
+                                        
+ 
+
 /** The board model of one view and selection. */
                              
                      
@@ -2458,13 +2467,17 @@ function stripOf(
                                          
                                                                                 
                                                 
+                                                                               
+                          
+                             
+                              
  
 
 /**
  * The board of one accepted view and the selected card id (or `null`).
  * Pure: no clock, no randomness, no I/O.
  */
-function boardOf(view              , selection               )             {
+function boardOf(view              , selection               , ui          = {})             {
   const raw = asRecord(view.view);
   const cards = asList(raw.cards);
 
@@ -2537,6 +2550,9 @@ function boardOf(view              , selection               )             {
     selectedCard,
     detail,
     featureDetail,
+    actionsEnabled: ui.actions === true,
+    pendingVerb: typeof ui.pendingVerb === "string" ? ui.pendingVerb : null,
+    actionOutput: typeof ui.actionOutput === "string" ? ui.actionOutput : null,
   };
 }
 
@@ -2741,6 +2757,57 @@ function approvalsSection(board            )              {
   );
 }
 
+/** The labels of the three consented verbs (F151-FR-026; the closed set). */
+const ACTION_LABELS                                             = [
+  { verb: "stop", label: "Stop" },
+  { verb: "stop-now", label: "Stop now" },
+  { verb: "resume", label: "Resume" },
+];
+
+/**
+ * The actions section (US5, T073; F151-FR-026): rendered only when the
+ * profile turned `specstride.kanban.actions` on — otherwise the board holds
+ * no button at all. Each verb is a button that only opens the confirmation
+ * dialog (`data-kanban-confirm`); the dialog's confirm control is the only
+ * thing that sends the verb, whose output is then shown verbatim as text.
+ * Pure: no fetch, no lane change, nothing is derived.
+ */
+function actionsSection(board            )                     {
+  if (!board.actionsEnabled) return null;
+  const children                           = ACTION_LABELS.map((action) =>
+    el(
+      "button",
+      {
+        class: "sskh-action",
+        "data-kanban-action": action.verb,
+        role: "button",
+        tabindex: "0",
+      },
+      action.label,
+    ),
+  );
+  if (board.pendingVerb !== null) {
+    const label = ACTION_LABELS.find((action) => action.verb === board.pendingVerb)?.label ?? String(board.pendingVerb);
+    children.push(
+      el(
+        "div",
+        { class: "sskh-confirm", "data-kanban-confirm": board.pendingVerb, role: "dialog" },
+        `Confirm: ${label} the run?`,
+        el(
+          "span",
+          { class: "sskh-confirm-row" },
+          el("button", { class: "sskh-confirm-yes", "data-kanban-confirm-verb": board.pendingVerb, role: "button", tabindex: "0" }, "Confirm"),
+          el("button", { class: "sskh-confirm-no", "data-kanban-cancel": "", role: "button", tabindex: "0" }, "Cancel"),
+        ),
+      ),
+    );
+  }
+  if (board.actionOutput !== null) {
+    children.push(el("span", { class: "sskh-action-output", "data-action-output": "" }, board.actionOutput));
+  }
+  return el("section", { class: "sskh-section", "data-section": "actions" }, el("h2", { class: "sskh-section-head" }, "Actions"), ...children);
+}
+
 /** The root element of the board tree, a pure function of the board. */
 function boardTreeOf(board            )              {
   const titles = phaseTitles(board);
@@ -2777,6 +2844,7 @@ function boardTreeOf(board            )              {
     isReader ? el("div", { class: "sskh-quota-line" }, "quota: not reported") : null,
     board.marker === null ? null : el("div", { class: "sskh-marker", role: "status" }, board.marker),
     board.strip,
+    actionsSection(board),
     attentionSection(board),
     budgetSection(board),
     approvalsSection(board),
@@ -3035,26 +3103,49 @@ function reactAdapterOf(sdk                    )                           {
  
 
 /** Attach the inspector's event handlers to the wired nodes of the tree:
- *  the detail buttons toggle, Escape and the close control clear. */
-function wire(node           , toggle                      , close            )       {
+ *  the detail buttons toggle, Escape and the close control clear. The
+ *  action buttons (US5) only open the confirm dialog; the dialog's confirm
+ *  control sends the verb through the injected sender and shows its output
+ *  verbatim; cancel clears the pending verb (F151-FR-026). */
+function wire(
+  node           ,
+  handlers   
+                                 
+                      
+                                           
+                                           
+                              
+   ,
+)       {
   const id = node.attrs["data-kanban-card-id"];
   if (typeof id === "string") {
-    node.attrs.onClick = () => toggle(id);
+    node.attrs.onClick = () => handlers.toggle(id);
     node.attrs.onKeyDown = (event                 ) => {
-      if (event.key === "Enter" || event.key === " ") toggle(id);
+      if (event.key === "Enter" || event.key === " ") handlers.toggle(id);
     };
   }
   if (node.attrs["data-kanban-detail-close"] !== undefined) {
-    node.attrs.onClick = close;
+    node.attrs.onClick = handlers.close;
   }
   if (node.attrs["data-kanban-detail"] !== undefined) {
     node.attrs.onKeyDown = (event                 ) => {
-      if (event.key === "Escape") close();
+      if (event.key === "Escape") handlers.close();
     };
+  }
+  const actionVerb = node.attrs["data-kanban-action"];
+  if (typeof actionVerb === "string" && handlers.requestAction !== undefined) {
+    node.attrs.onClick = () => handlers.requestAction(actionVerb);
+  }
+  const confirmVerb = node.attrs["data-kanban-confirm-verb"];
+  if (typeof confirmVerb === "string" && handlers.confirmAction !== undefined) {
+    node.attrs.onClick = () => handlers.confirmAction(confirmVerb);
+  }
+  if (node.attrs["data-kanban-cancel"] !== undefined && handlers.cancelAction !== undefined) {
+    node.attrs.onClick = () => handlers.cancelAction();
   }
   for (const child of node.children) {
     if (typeof child === "object" && child !== null && "attrs" in (child             )) {
-      wire(child             , toggle, close);
+      wire(child             , handlers);
     }
   }
 }
@@ -3064,25 +3155,54 @@ function wire(node           , toggle                      , close            ) 
                           
                                                                      
                      
+                                                                             
+             
+                                                            
+                     
+                                                                          
+                                             
+    
  
 
 /**
- * The board component (T058, T070 — US4, US6): renders the board tree for
- * `view` and the current selection. Opening or closing a detail is client
- * state only — no fetch, no lane change (F151-FR-047). The detail button
- * toggles (click, Enter, Space; a second activation closes), Escape and the
- * close control clear the selection.
+ * The board component (T058, T070, T073 — US4, US6, US5): renders the board
+ * tree for `view` and the current selection. Opening or closing a detail is
+ * client state only — no fetch, no lane change (F151-FR-047). The detail
+ * button toggles (click, Enter, Space; a second activation closes), Escape
+ * and the close control clear the selection. An action button only opens
+ * the confirm dialog; the confirmed control sends exactly one verb and its
+ * output is shown verbatim as text (F151-FR-026).
  */
 function createBoardComponent(deps                    )                {
   const React = deps.sdk.React                                                                                      ;
   if (typeof React.useState !== "function") throw new TypeError("createBoardComponent: sdk.React.useState is required");
   return () => {
     const [selection, setSelection] = React.useState(null);
-    const board = boardOf(deps.view, selection                 );
+    const [pendingVerb, setPendingVerb] = React.useState(null);
+    const [actionOutput, setActionOutput] = React.useState(null);
+    const actionsEnabled = deps.actions?.enabled === true;
+    const board = boardOf(deps.view, selection                 , {
+      actions: actionsEnabled,
+      pendingVerb: pendingVerb                 ,
+      actionOutput: actionOutput                 ,
+    });
     const tree = boardTreeOf(board);
     const toggle = (id        ) => setSelection(selection === id ? null : id);
     const close = () => setSelection(null);
-    wire(tree                        , toggle, close);
+    const send = deps.actions?.send;
+    wire(tree                        , {
+      toggle,
+      close,
+      requestAction: actionsEnabled ? (verb        ) => setPendingVerb(verb) : undefined,
+      confirmAction:
+        actionsEnabled && send !== undefined
+          ? (verb        ) => {
+              setPendingVerb(null);
+              void send(verb).then((output        ) => setActionOutput(output));
+            }
+          : undefined,
+      cancelAction: () => setPendingVerb(null),
+    });
     return adaptTree(tree, React);
   };
 }

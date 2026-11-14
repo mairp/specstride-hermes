@@ -122,6 +122,15 @@ export interface BoardFeature {
   run: Record<string, unknown> | null;
 }
 
+/** The pure UI state the tree may render besides the view (US5): whether
+ *  the profile turned the consented actions on, which verb awaits its
+ *  confirmation, and the verbatim output of the last sent verb. */
+export interface BoardUi {
+  readonly actions?: boolean;
+  readonly pendingVerb?: string | null;
+  readonly actionOutput?: string | null;
+}
+
 /** The board model of one view and selection. */
 export interface BoardModel {
   view: AcceptedView;
@@ -143,13 +152,17 @@ export interface BoardModel {
   detail: Record<string, unknown> | null;
   /** The selected feature's detail (`featureDetails[<feature>]`), or `null`. */
   featureDetail: Record<string, unknown> | null;
+  /** The consented actions state (US5): enabled, pending verb, last output. */
+  actionsEnabled: boolean;
+  pendingVerb: string | null;
+  actionOutput: string | null;
 }
 
 /**
  * The board of one accepted view and the selected card id (or `null`).
  * Pure: no clock, no randomness, no I/O.
  */
-export function boardOf(view: AcceptedView, selection: string | null): BoardModel {
+export function boardOf(view: AcceptedView, selection: string | null, ui: BoardUi = {}): BoardModel {
   const raw = asRecord(view.view);
   const cards = asList(raw.cards);
 
@@ -222,5 +235,8 @@ export function boardOf(view: AcceptedView, selection: string | null): BoardMode
     selectedCard,
     detail,
     featureDetail,
+    actionsEnabled: ui.actions === true,
+    pendingVerb: typeof ui.pendingVerb === "string" ? ui.pendingVerb : null,
+    actionOutput: typeof ui.actionOutput === "string" ? ui.actionOutput : null,
   };
 }

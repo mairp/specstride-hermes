@@ -45,6 +45,8 @@ export interface ProjectionRecord {
   lastGoodAt: string | null;
   /** Set by a failed cycle, cleared by the next completed one. */
   stale: boolean;
+  /** Epoch ms of the last board read-back (the ≤ 60 s foreign-write window). */
+  lastReadBackAt?: number | null;
 }
 
 /** The empty dataset a torn file reads as. */
@@ -122,6 +124,7 @@ export class ProjectionStore {
       signature: typeof ok.signature === "string" ? ok.signature : "",
       lastGoodAt: typeof ok.lastGoodAt === "string" ? ok.lastGoodAt : null,
       stale: ok.stale === true,
+      lastReadBackAt: typeof ok.lastReadBackAt === "number" ? ok.lastReadBackAt : null,
     };
   }
 

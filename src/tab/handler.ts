@@ -253,7 +253,12 @@ export function tabAction(
     const outcome = await callShim("", argv);
     return {
       status: 200,
-      json: { answer: outcome.exit === 0 ? "action-accepted" : "action-refused", verb: body.verb },
+      json: {
+        answer: outcome.exit === 0 ? "action-accepted" : "action-refused",
+        verb: body.verb,
+        // The CLI's own stdout, shown verbatim by the tab as text (F151-FR-026).
+        output: outcome.stdout,
+      },
     };
   });
 }

@@ -24,7 +24,7 @@ import type { WantedCard } from "./project.ts";
 
 /** One planned verb: the verb, the card key and, when known, the Hermes id. */
 export interface PlannedVerb {
-  readonly verb: "create" | "schedule" | "edit" | "complete" | "archive" | "promote" | "block";
+  readonly verb: "create" | "schedule" | "edit" | "complete" | "archive" | "promote" | "block" | "comment";
   /** The card key — the idempotency key of the call. */
   readonly key: string;
   /** The Hermes id, when the verb addresses an existing card. */
@@ -35,7 +35,12 @@ export interface PlannedVerb {
   readonly result: string | null;
   /** The verbatim block text of `block` (attention cards only). */
   readonly blockText: string | null;
+  /** The text of `comment` (the one stale comment of a human-edited card). */
+  readonly commentText?: string;
 }
+
+/** The one stale comment a human-edited card ever gets (sync-sidecar.md). */
+export const STALE_COMMENT = "stale — edited outside Specstride; column kept in sync";
 
 /** The stored card of the projection store (structural subset). */
 export interface StoredCard {
@@ -58,6 +63,10 @@ export interface ActualCard {
   assignee?: string;
   /** The tenant the board reports; absent when `show` did not carry one. */
   tenant?: string;
+  /** The title the board reports; absent when `show` did not carry one. */
+  title?: string;
+  /** The body the board reports; absent when `show` did not carry one. */
+  body?: string;
 }
 
 /** The stable change signature over the wanted set (F151-FR-040). */
@@ -141,6 +150,25 @@ export function planVerbs(inputs: PlanInputs): PlannedVerb[] {
         (actual.tenant !== undefined && actual.tenant !== card.tenant));
     if (foreignColumn || foreignGuards) {
       verbs.push({ verb: "schedule", key: card.key, id: actual.hermesId, card, result: null, blockText: null });
+    }
+    // A foreign title or body (a human edit): one stale comment, the text is
+    // never written again (the `edit` below is suppressed once the store
+    // marks the card `humanEdited`), the column is still kept in sync
+    // (sync-sidecar.md "Foreign writes").
+    const foreignText =
+      actual !== undefined &&
+      ((actual.title !== undefined && actual.title !== stored.title) ||
+        (actual.body !== undefined && actual.body !== stored.body));
+    if (foreignText && !stored.humanEdited) {
+      verbs.push({
+        verb: "comment",
+        key: card.key,
+        id: actual.hermesId,
+        card: null,
+        result: null,
+        blockText: null,
+        commentText: STALE_COMMENT,
+      });
     }
     if (stored.column !== "done" && card.column === "done") {
       // `scheduled` → `done`: the engine verb of the transition table

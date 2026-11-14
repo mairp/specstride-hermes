@@ -50,6 +50,7 @@ function record(partial: Partial<ProjectionRecord> = {}): ProjectionRecord {
     signature: "abcd1234",
     lastGoodAt: "2026-11-11T12:00:00.000Z",
     stale: false,
+    lastReadBackAt: null,
     ...partial,
   };
 }

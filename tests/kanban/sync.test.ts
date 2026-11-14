@@ -132,9 +132,13 @@ test("a restart with the same store gives 0 creates (T029)", async () => {
     await syncOnce("/ws", h.deps);
     h.executed.length = 0;
     // A brand-new memo map: the restart's view source has no engine memory.
+    // T074 (the ≤ 60 s foreign-write read-back): the read-back window has
+    // passed, so the cycle runs its read-back — but the unchanged view
+    // gives no create, no edit and no other write.
     const result = await syncOnce("/ws", { ...h.deps, memo: new Map(), now: () => 2_000_000 });
     assert.ok(!verbsOf(h.executed).includes("create"), JSON.stringify(verbsOf(h.executed)));
-    assert.ok(result.shortCircuit, "the unchanged view is short-circuited from the store");
+    assert.deepEqual(verbsOf(h.executed), [], "the unchanged view gives no write after the read-back window");
+    assert.equal(result.ok, true);
   } finally {
     h.cleanup();
   }

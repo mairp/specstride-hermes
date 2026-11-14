@@ -203,6 +203,57 @@ function approvalsSection(board: BoardModel): ElementNode {
   );
 }
 
+/** The labels of the three consented verbs (F151-FR-026; the closed set). */
+const ACTION_LABELS: readonly { verb: string; label: string }[] = [
+  { verb: "stop", label: "Stop" },
+  { verb: "stop-now", label: "Stop now" },
+  { verb: "resume", label: "Resume" },
+];
+
+/**
+ * The actions section (US5, T073; F151-FR-026): rendered only when the
+ * profile turned `specstride.kanban.actions` on — otherwise the board holds
+ * no button at all. Each verb is a button that only opens the confirmation
+ * dialog (`data-kanban-confirm`); the dialog's confirm control is the only
+ * thing that sends the verb, whose output is then shown verbatim as text.
+ * Pure: no fetch, no lane change, nothing is derived.
+ */
+function actionsSection(board: BoardModel): ElementNode | null {
+  if (!board.actionsEnabled) return null;
+  const children: (ElementNode | string)[] = ACTION_LABELS.map((action) =>
+    el(
+      "button",
+      {
+        class: "sskh-action",
+        "data-kanban-action": action.verb,
+        role: "button",
+        tabindex: "0",
+      },
+      action.label,
+    ),
+  );
+  if (board.pendingVerb !== null) {
+    const label = ACTION_LABELS.find((action) => action.verb === board.pendingVerb)?.label ?? String(board.pendingVerb);
+    children.push(
+      el(
+        "div",
+        { class: "sskh-confirm", "data-kanban-confirm": board.pendingVerb, role: "dialog" },
+        `Confirm: ${label} the run?`,
+        el(
+          "span",
+          { class: "sskh-confirm-row" },
+          el("button", { class: "sskh-confirm-yes", "data-kanban-confirm-verb": board.pendingVerb, role: "button", tabindex: "0" }, "Confirm"),
+          el("button", { class: "sskh-confirm-no", "data-kanban-cancel": "", role: "button", tabindex: "0" }, "Cancel"),
+        ),
+      ),
+    );
+  }
+  if (board.actionOutput !== null) {
+    children.push(el("span", { class: "sskh-action-output", "data-action-output": "" }, board.actionOutput));
+  }
+  return el("section", { class: "sskh-section", "data-section": "actions" }, el("h2", { class: "sskh-section-head" }, "Actions"), ...children);
+}
+
 /** The root element of the board tree, a pure function of the board. */
 export function boardTreeOf(board: BoardModel): ElementNode {
   const titles = phaseTitles(board);
@@ -239,6 +290,7 @@ export function boardTreeOf(board: BoardModel): ElementNode {
     isReader ? el("div", { class: "sskh-quota-line" }, "quota: not reported") : null,
     board.marker === null ? null : el("div", { class: "sskh-marker", role: "status" }, board.marker),
     board.strip,
+    actionsSection(board),
     attentionSection(board),
     budgetSection(board),
     approvalsSection(board),
