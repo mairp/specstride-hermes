@@ -8,3 +8,17 @@ pull_request_rules:
     actions:
       merge:
         method: merge
+
+  # Automerge fallback (operator request: EVERY PR to main merges
+  # automatically): merges any non-draft PR to main regardless of check
+  # state, so a PR never stalls — including on this mirror where Actions
+  # runs may not execute. The rule above handles the green-gate path; merge
+  # conflicts still block (Mergify cannot merge them) and draft PRs stay
+  # for a person.
+  - name: automerge every PR to main
+    conditions:
+      - "base=main"
+      - "-draft"
+    actions:
+      merge:
+        method: merge
